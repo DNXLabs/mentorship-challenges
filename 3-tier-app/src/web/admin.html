@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .dashboard-container {
+            display: none;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .submission-details {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: none;
+        }
+        .back-link {
+            margin-top: 20px;
+            display: block;
+        }
+        .filters {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .filters select, .filters input {
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Admin Dashboard</h1>
+    
+    <!-- Login Form -->
+    <div class="login-container" id="loginContainer">
+        <h2>Login</h2>
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password">
+        </div>
+        <div class="error" id="loginError"></div>
+        <button type="button" onclick="login()">Login</button>
+    </div>
+    
+    <!-- Dashboard -->
+    <div class="dashboard-container" id="dashboardContainer">
+        <h2>User Submissions</h2>
+        
+        <div class="filters">
+            <label for="filterSubscription">Filter by Subscription:</label>
+            <select id="filterSubscription" onchange="filterSubmissions()">
+                <option value="">All</option>
+                <option value="free">Free</option>
+                <option value="basic">Basic</option>
+                <option value="premium">Premium</option>
+            </select>
+            
+            <label for="filterInterest">Filter by Interest:</label>
+            <select id="filterInterest" onchange="filterSubmissions()">
+                <option value="">All</option>
+                <option value="technology">Technology</option>
+                <option value="health">Health & Wellness</option>
+                <option value="finance">Finance</option>
+                <option value="education">Education</option>
+                <option value="entertainment">Entertainment</option>
+            </select>
+            
+            <button type="button" onclick="refreshData()">Refresh Data</button>
+        </div>
+        
+        <table id="submissionsTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Interest</th>
+                    <th>Subscription</th>
+                    <th>Submitted</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="submissionsBody">
+                <!-- Submissions will be loaded here -->
+            </tbody>
+        </table>
+        
+        <div class="submission-details" id="submissionDetails">
+            <h3>Submission Details</h3>
+            <div id="detailsContent"></div>
+            <button type="button" onclick="hideDetails()">Close</button>
+        </div>
+        
+        <a href="/" class="back-link">Back to Form</a>
+    </div>
+
+    <script>
+        const API_URL = '/api/submissions';
+        let allSubmissions = [];
+        
+        // Simple admin authentication
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            // Simple hardcoded credentials (in a real app, this would be server-side)
+            if (username === 'admin' && password === 'admin123') {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('dashboardContainer').style.display = 'block';
+                loadSubmissions();
+            } else {
+                document.getElementById('loginError').textContent = 'Invalid username or password';
+            }
+        }
+        
+        // Load all submissions from the API
+        async function loadSubmissions() {
+            try {
+                const response = await fetch(API_URL);
+                allSubmissions = await response.json();
+                displaySubmissions(allSubmissions);
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                alert('Failed to load submissions. Please try again.');
+            }
+        }
+        
+        // Display submissions in the table
+        function displaySubmissions(submissions) {
+            const tbody = document.getElementById('submissionsBody');
+            tbody.innerHTML = '';
+            
+            if (submissions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No submissions found</td></tr>';
+                return;
+            }
+            
+            submissions.forEach(submission => {
+                const row = document.createElement('tr');
+                
+                const fullName = `${submission.firstName} ${submission.lastName}`;
+                const submittedDate = new Date(submission.submittedAt).toLocaleString();
+                
+                row.innerHTML = `
+                    <td>${fullName}</td>
+                    <td>${submission.email}</td>
+                    <td>${submission.interests}</td>
+                    <td>${submission.subscription}</td>
+                    <td>${submittedDate}</td>
+                    <td>
+                        <button type="button" onclick="viewDetails('${submission.id}')">View</button>
+                        <button type="button" onclick="deleteSubmission('${submission.id}')">Delete</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // View submission details
+        function viewDetails(id) {
+            const submission = allSubmissions.find(s => s.id === id);
+            if (!submission) return;
+            
+            const detailsDiv = document.getElementById('detailsContent');
+            const submittedDate = new Date(submission.submittedAt).toLocaleString();
+            
+            let detailsHTML = `
+                <p><strong>Name:</strong> ${submission.firstName} ${submission.lastName}</p>
+                <p><strong>Email:</strong> ${submission.email}</p>
+                <p><strong>Phone:</strong> ${submission.phone || 'Not provided'}</p>
+                <p><strong>Interest:</strong> ${submission.interests}</p>
+                <p><strong>Subscription:</strong> ${submission.subscription}</p>
+                <p><strong>Contact Frequency:</strong> ${submission.frequency}</p>
+                <p><strong>Comments:</strong> ${submission.comments || 'None'}</p>
+                <p><strong>Terms Accepted:</strong> ${submission.termsAccepted ? 'Yes' : 'No'}</p>
+                <p><strong>Submitted:</strong> ${submittedDate}</p>
+            `;
+            
+            detailsDiv.innerHTML = detailsHTML;
+            document.getElementById('submissionDetails').style.display = 'block';
+        }
+        
+        // Hide details panel
+        function hideDetails() {
+            document.getElementById('submissionDetails').style.display = 'none';
+        }
+        
+        // Delete a submission
+        async function deleteSubmission(id) {
+            if (!confirm('Are you sure you want to delete this submission?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    // Remove from local array and update display
+                    allSubmissions = allSubmissions.filter(s => s.id !== id);
+                    displaySubmissions(allSubmissions);
+                } else {
+                    alert('Failed to delete submission');
+                }
+            } catch (error) {
+                console.error('Error deleting submission:', error);
+                alert('An error occurred while deleting the submission');
+            }
+        }
+        
+        // Filter submissions
+        function filterSubmissions() {
+            const subscriptionFilter = document.getElementById('filterSubscription').value;
+            const interestFilter = document.getElementById('filterInterest').value;
+            
+            let filtered = [...allSubmissions];
+            
+            if (subscriptionFilter) {
+                filtered = filtered.filter(s => s.subscription === subscriptionFilter);
+            }
+            
+            if (interestFilter) {
+                filtered = filtered.filter(s => s.interests === interestFilter);
+            }
+            
+            displaySubmissions(filtered);
+        }
+        
+        // Refresh data
+        function refreshData() {
+            loadSubmissions();
+        }
+    </script>
+</body>
+</html>
