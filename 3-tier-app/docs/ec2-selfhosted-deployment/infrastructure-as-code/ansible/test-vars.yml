@@ -1,0 +1,14 @@
+---
+- name: Test Variables
+  hosts: three_tier_app
+  gather_facts: yes
+  
+  tasks:
+    - name: Debug all variables
+      debug:
+        msg:
+          - "Project: {{ project_name }}"
+          - "Environment: {{ environment }}"
+          - "App name: {{ app.name }}"
+          - "App dir: {{ app.app_dir }}"
+          - "App user: {{ app.user }}"

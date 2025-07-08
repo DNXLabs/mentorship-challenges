@@ -1,0 +1,45 @@
+---
+# Ansible Inventory Template for 3-Tier Application
+# Copy this file to hosts.yml and update with your server details
+# This inventory can be automatically generated from Terraform outputs
+
+all:
+  children:
+    three_tier_app:
+      hosts:
+        "{{ inventory_hostname | default('3-tier-app-server') }}":
+          # Connection details
+          ansible_host: "{{ server_public_ip }}"
+          ansible_user: "{{ ansible_user | default('ubuntu') }}"
+          ansible_ssh_private_key_file: "{{ ssh_private_key_path }}"
+          ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+          
+          # Server details (from Terraform outputs)
+          instance_id: "{{ instance_id | default('') }}"
+          availability_zone: "{{ availability_zone | default('') }}"
+          private_ip: "{{ server_private_ip | default('') }}"
+          instance_type: "{{ instance_type | default('t3.micro') }}"
+          
+          # Application configuration
+          app_name: "{{ app_name | default('3-tier-form-app') }}"
+          app_environment: "{{ app_environment | default('dev') }}"
+          app_owner: "{{ app_owner | default('admin@example.com') }}"
+          
+    web_servers:
+      hosts:
+        "{{ inventory_hostname | default('3-tier-app-server') }}":
+          
+    api_servers:
+      hosts:
+        "{{ inventory_hostname | default('3-tier-app-server') }}":
+          
+    database_servers:
+      hosts:
+        "{{ inventory_hostname | default('3-tier-app-server') }}":
+
+# Group variables can be defined here or in group_vars/
+  vars:
+    # Common variables for all hosts
+    project_name: "{{ project_name | default('3-tier-app') }}"
+    environment: "{{ environment | default('dev') }}"
+    deployment_user: "{{ deployment_user | default('ubuntu') }}"

@@ -1,0 +1,10 @@
+---
+# Debug task to test variable access
+
+- name: Debug variables in role
+  debug:
+    msg:
+      - "Project: {{ project_name | default('undefined') }}"
+      - "App name: {{ app.name | default('undefined') }}"
+      - "App dir: {{ app.app_dir | default('undefined') }}"
+      - "App user: {{ app.user | default('undefined') }}"

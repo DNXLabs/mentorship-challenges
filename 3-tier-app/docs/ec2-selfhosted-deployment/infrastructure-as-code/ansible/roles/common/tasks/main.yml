@@ -1,0 +1,98 @@
+---
+# Common setup tasks for all servers
+
+- name: Debug variables in role
+  debug:
+    msg:
+      - "Project: {{ project_name | default('undefined') }}"
+      - "App name: {{ app.name | default('undefined') }}"
+      - "App dir: {{ app.app_dir | default('undefined') }}"
+      - "App user: {{ app.user | default('undefined') }}"
+  tags: ['debug']
+
+- name: Update package cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  tags: ['packages']
+
+- name: Install additional common packages
+  apt:
+    name:
+      - git
+      - curl
+      - wget
+      - unzip
+      - tree
+      - jq
+      - htop
+      - ncdu
+      - net-tools
+    state: present
+  tags: ['packages']
+
+- name: Create application directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+    mode: '0755'
+  loop:
+    - "{{ app.app_dir }}"
+    - "{{ app.logs_dir }}"
+    - "{{ app.backups_dir }}"
+  tags: ['directories']
+
+- name: Clone application repository
+  git:
+    repo: "{{ repository.url }}"
+    dest: "{{ repository.local_path }}"
+    version: "{{ repository.branch }}"
+    force: yes
+  become_user: "{{ app.user }}"
+  ignore_errors: yes
+  tags: ['repository']
+
+- name: Create temporary source directory if git clone failed
+  file:
+    path: "{{ repository.local_path }}/3-tier-app/src"
+    state: directory
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+    mode: '0755'
+    recurse: yes
+  tags: ['repository']
+
+- name: Set timezone to Australia/Sydney
+  timezone:
+    name: Australia/Sydney
+  notify: restart rsyslog
+  tags: ['timezone']
+
+- name: Configure log rotation for application logs
+  template:
+    src: logrotate.j2
+    dest: /etc/logrotate.d/3-tier-app
+    mode: '0644'
+  tags: ['logging']
+
+- name: Create application environment file
+  template:
+    src: app.env.j2
+    dest: "{{ app.app_dir }}/.env"
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+    mode: '0600'
+  tags: ['configuration']
+
+- name: Display system information
+  debug:
+    msg:
+      - "Server: {{ inventory_hostname }}"
+      - "OS: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+      - "Kernel: {{ ansible_kernel }}"
+      - "Architecture: {{ ansible_architecture }}"
+      - "Memory: {{ ansible_memtotal_mb }}MB"
+      - "CPU Cores: {{ ansible_processor_vcpus }}"
+  tags: ['info']

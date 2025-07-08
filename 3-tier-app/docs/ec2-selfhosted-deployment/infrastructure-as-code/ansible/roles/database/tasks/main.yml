@@ -1,0 +1,126 @@
+---
+# Database setup and configuration tasks
+
+- name: Install MySQL Python dependencies
+  apt:
+    name:
+      - python3-pymysql
+      - python3-mysqldb
+    state: present
+  tags: ['packages']
+
+- name: Ensure MySQL is running
+  systemd:
+    name: mysql
+    state: started
+    enabled: yes
+  tags: ['service']
+
+- name: Set MySQL root password
+  mysql_user:
+    name: root
+    password: "{{ database.root_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    state: present
+  ignore_errors: yes
+  tags: ['security']
+
+- name: Create MySQL configuration file for root
+  template:
+    src: mysql_root.cnf.j2
+    dest: /root/.my.cnf
+    mode: '0600'
+    owner: root
+    group: root
+  tags: ['configuration']
+
+- name: Remove anonymous MySQL users
+  mysql_user:
+    name: ''
+    host_all: yes
+    state: absent
+    login_user: root
+    login_password: "{{ database.root_password }}"
+  tags: ['security']
+
+- name: Remove MySQL test database
+  mysql_db:
+    name: test
+    state: absent
+    login_user: root
+    login_password: "{{ database.root_password }}"
+  tags: ['security']
+
+- name: Create application database
+  mysql_db:
+    name: "{{ database.name }}"
+    state: present
+    login_user: root
+    login_password: "{{ database.root_password }}"
+  tags: ['database']
+
+- name: Create application database user
+  mysql_user:
+    name: "{{ database.user }}"
+    password: "{{ database.password }}"
+    priv: "{{ database.name }}.*:ALL"
+    host: "{{ database.host }}"
+    state: present
+    login_user: root
+    login_password: "{{ database.root_password }}"
+  tags: ['database']
+
+- name: Copy database schema file
+  copy:
+    src: "{{ repository.local_path }}/3-tier-app/src/database/init.sql"
+    dest: "{{ app.app_dir }}/init.sql"
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+    mode: '0644'
+    remote_src: yes
+  tags: ['schema']
+
+- name: Import database schema
+  mysql_db:
+    name: "{{ database.name }}"
+    state: import
+    target: "{{ app.app_dir }}/init.sql"
+    login_user: root
+    login_password: "{{ database.root_password }}"
+  tags: ['schema']
+
+- name: Verify database setup
+  mysql_query:
+    login_user: "{{ database.user }}"
+    login_password: "{{ database.password }}"
+    login_db: "{{ database.name }}"
+    query: "SHOW TABLES;"
+  register: db_tables
+  tags: ['verification']
+
+- name: Display database tables
+  debug:
+    msg: "Database tables: {{ db_tables.query_result[0] | map(attribute='Tables_in_' + database.name) | list }}"
+  when: db_tables.query_result is defined
+  tags: ['verification']
+
+- name: Create database backup script
+  template:
+    src: backup_db.sh.j2
+    dest: "{{ app.backups_dir }}/backup_db.sh"
+    mode: '0755'
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+  tags: ['backup']
+
+- name: Schedule database backups
+  cron:
+    name: "3-tier-app database backup"
+    cron_file: 3-tier-app-backup
+    user: "{{ app.user }}"
+    job: "{{ app.backups_dir }}/backup_db.sh"
+    minute: "0"
+    hour: "2"
+    state: present
+  when: backup.enabled
+  tags: ['backup']

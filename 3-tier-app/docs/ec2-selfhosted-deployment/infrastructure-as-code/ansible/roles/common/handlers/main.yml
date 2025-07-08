@@ -1,0 +1,7 @@
+---
+# Common handlers
+
+- name: restart rsyslog
+  systemd:
+    name: rsyslog
+    state: restarted

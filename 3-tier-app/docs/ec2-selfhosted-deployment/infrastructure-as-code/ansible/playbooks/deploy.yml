@@ -1,0 +1,79 @@
+---
+# Main deployment playbook for 3-tier application
+# This playbook orchestrates the complete deployment process
+
+- name: Deploy 3-Tier Application
+  hosts: three_tier_app
+  become: yes
+  gather_facts: yes
+  
+  vars:
+    deployment_timestamp: "{{ ansible_date_time.epoch }}"
+    
+  pre_tasks:
+    - name: Display deployment information
+      debug:
+        msg:
+          - "Deploying 3-tier application"
+          - "Target server: {{ inventory_hostname }} ({{ ansible_host }})"
+          - "Environment: {{ environment }}"
+          - "Timestamp: {{ ansible_date_time.iso8601 }}"
+    
+    - name: Verify server connectivity
+      ping:
+      
+    - name: Check if user data setup completed
+      stat:
+        path: /var/log/user-data-complete
+      register: user_data_status
+      
+    - name: Fail if user data setup not completed
+      fail:
+        msg: "User data setup not completed. Please wait for server initialization to finish."
+      when: not user_data_status.stat.exists
+
+  roles:
+    - role: common
+      tags: ['common', 'setup']
+    - role: database
+      tags: ['database', 'mysql']
+    - role: application
+      tags: ['application', 'api']
+    - role: webserver
+      tags: ['webserver', 'nginx']
+    - role: monitoring
+      tags: ['monitoring', 'logs']
+    - role: security
+      tags: ['security', 'hardening']
+
+  post_tasks:
+    - name: Verify application deployment
+      uri:
+        url: "http://{{ ansible_host }}/api/submissions"
+        method: GET
+        status_code: 200
+      register: api_check
+      retries: 3
+      delay: 10
+      ignore_errors: yes
+      
+    - name: Display deployment results
+      debug:
+        msg:
+          - "Deployment completed successfully!"
+          - "Application URLs:"
+          - "  Main App: http://{{ ansible_host }}/"
+          - "  Admin Panel: http://{{ ansible_host }}/admin.html"
+          - "  API Endpoint: http://{{ ansible_host }}/api/submissions"
+          - "SSH Access: ssh -i ~/.ssh/3-tier-app-key ubuntu@{{ ansible_host }}"
+      when: api_check is succeeded
+      
+    - name: Display troubleshooting information
+      debug:
+        msg:
+          - "Deployment completed with issues. Check the following:"
+          - "  - API Status: {{ api_check.status | default('Failed') }}"
+          - "  - Check logs: sudo journalctl -u nginx -f"
+          - "  - Check PM2: pm2 status"
+          - "  - Check MySQL: sudo systemctl status mysql"
+      when: api_check is failed

@@ -1,0 +1,84 @@
+---
+# Monitoring and logging setup tasks
+
+- name: Create monitoring scripts directory
+  file:
+    path: "{{ app.app_dir }}/scripts"
+    state: directory
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+    mode: '0755'
+  tags: ['directories']
+
+- name: Create comprehensive monitoring script
+  template:
+    src: monitor_all.sh.j2
+    dest: "{{ app.app_dir }}/scripts/monitor_all.sh"
+    mode: '0755'
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+  tags: ['monitoring']
+
+- name: Create log analysis script
+  template:
+    src: analyze_logs.sh.j2
+    dest: "{{ app.app_dir }}/scripts/analyze_logs.sh"
+    mode: '0755'
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+  tags: ['monitoring']
+
+- name: Create system health check script
+  template:
+    src: health_check.sh.j2
+    dest: "{{ app.app_dir }}/scripts/health_check.sh"
+    mode: '0755'
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+  tags: ['monitoring']
+
+- name: Setup log monitoring with logwatch (if available)
+  apt:
+    name: logwatch
+    state: present
+  ignore_errors: yes
+  tags: ['packages']
+
+- name: Configure rsyslog for application logging
+  template:
+    src: rsyslog_app.conf.j2
+    dest: /etc/rsyslog.d/30-3tier-app.conf
+    mode: '0644'
+  notify: restart rsyslog
+  tags: ['logging']
+
+- name: Create monitoring cron job
+  cron:
+    name: "3-tier-app health check"
+    cron_file: 3-tier-app-monitoring
+    user: "{{ app.user }}"
+    job: "{{ app.app_dir }}/scripts/health_check.sh >> {{ app.logs_dir }}/health_check.log 2>&1"
+    minute: "*/5"
+    state: present
+  when: monitoring.enabled
+  tags: ['cron']
+
+- name: Create log cleanup script
+  template:
+    src: cleanup_logs.sh.j2
+    dest: "{{ app.app_dir }}/scripts/cleanup_logs.sh"
+    mode: '0755'
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+  tags: ['maintenance']
+
+- name: Schedule log cleanup
+  cron:
+    name: "3-tier-app log cleanup"
+    cron_file: 3-tier-app-cleanup
+    user: "{{ app.user }}"
+    job: "{{ app.app_dir }}/scripts/cleanup_logs.sh"
+    minute: "0"
+    hour: "1"
+    state: present
+  tags: ['cron']

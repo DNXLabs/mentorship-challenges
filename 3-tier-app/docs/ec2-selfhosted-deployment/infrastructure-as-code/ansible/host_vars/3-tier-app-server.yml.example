@@ -1,0 +1,47 @@
+---
+# Example host-specific variables for 3-tier-app-server
+# Copy this file to 3-tier-app-server.yml and update with your values
+
+# Connection Configuration
+ansible_host: "203.0.113.10"  # Your server's public IP
+ansible_user: ubuntu
+ansible_ssh_private_key_file: ~/.ssh/3-tier-app  # Path to your SSH private key
+ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+
+# Server Details (from Terraform outputs)
+instance_id: "i-1234567890abcdef0"
+availability_zone: "us-east-1a"
+private_ip: "10.0.1.100"
+instance_type: "t3.micro"
+
+# Application Configuration
+app_name: "3-tier-form-app"
+app_environment: "dev"
+app_owner: "your-email@example.com"
+
+# Project Configuration
+project_name: "3-tier-app"
+environment: "dev"
+deployment_user: ubuntu
+
+# Database Configuration
+db_name: "formapp"
+db_user: "formapp_user"
+db_password: "MySecurePassword123!"
+db_root_password: "MySecureRootPassword123!"
+
+# Application Configuration
+app_port: 3000
+
+# Web Server Configuration
+nginx_server_name: "myapp.example.com"  # Your domain or "_" for any
+
+# PM2 Configuration
+pm2_app_name: "formapp-api"
+pm2_instances: 1
+
+# Feature Flags
+security_ufw_enabled: true
+security_fail2ban_enabled: true
+backup_enabled: true
+monitoring_enabled: true

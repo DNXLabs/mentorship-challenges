@@ -1,0 +1,112 @@
+---
+# Application deployment and configuration tasks
+
+- name: Verify Node.js installation
+  command: node --version
+  register: node_version
+  changed_when: false
+  tags: ['verification']
+
+- name: Display Node.js version
+  debug:
+    msg: "Node.js version: {{ node_version.stdout }}"
+  tags: ['verification']
+
+- name: Copy API source code
+  copy:
+    src: "{{ repository.local_path }}/3-tier-app/src/api/"
+    dest: "{{ app.app_dir }}/api/"
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+    mode: '0755'
+    remote_src: yes
+  tags: ['deployment']
+
+- name: Install Node.js dependencies
+  npm:
+    path: "{{ app.app_dir }}/api"
+    state: present
+  become_user: "{{ app.user }}"
+  tags: ['dependencies']
+
+- name: Copy environment file to API directory
+  copy:
+    src: "{{ app.app_dir }}/.env"
+    dest: "{{ app.app_dir }}/api/.env"
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+    mode: '0600'
+    remote_src: yes
+  tags: ['configuration']
+
+- name: Create PM2 ecosystem configuration
+  template:
+    src: ecosystem.config.js.j2
+    dest: "{{ app.app_dir }}/ecosystem.config.js"
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+    mode: '0644'
+  tags: ['configuration']
+
+- name: Stop existing PM2 processes
+  command: pm2 delete all
+  become_user: "{{ app.user }}"
+  ignore_errors: yes
+  tags: ['deployment']
+
+- name: Start application with PM2
+  command: pm2 start {{ app.app_dir }}/ecosystem.config.js
+  become_user: "{{ app.user }}"
+  args:
+    chdir: "{{ app.app_dir }}/api"
+  tags: ['deployment']
+
+- name: Save PM2 configuration
+  command: pm2 save
+  become_user: "{{ app.user }}"
+  tags: ['deployment']
+
+- name: Setup PM2 startup script
+  command: pm2 startup systemd -u {{ app.user }} --hp {{ app.home_dir }}
+  register: pm2_startup
+  tags: ['service']
+
+- name: Execute PM2 startup command
+  shell: "{{ pm2_startup.stdout }}"
+  when: pm2_startup.stdout is defined and 'sudo' in pm2_startup.stdout
+  tags: ['service']
+
+- name: Wait for application to start
+  wait_for:
+    port: "{{ app.port }}"
+    host: localhost
+    delay: 5
+    timeout: 30
+  tags: ['verification']
+
+- name: Test API endpoint
+  uri:
+    url: "http://localhost:{{ app.port }}/api/submissions"
+    method: GET
+    status_code: 200
+  register: api_test
+  retries: 3
+  delay: 5
+  tags: ['verification']
+
+- name: Display API test results
+  debug:
+    msg: 
+      - "API Status: {{ api_test.status }}"
+      - "API Response: {{ api_test.json | default('No JSON response') }}"
+  when: api_test is succeeded
+  tags: ['verification']
+
+- name: Create application monitoring script
+  template:
+    src: monitor_app.sh.j2
+    dest: "{{ app.app_dir }}/monitor_app.sh"
+    mode: '0755'
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+  tags: ['monitoring']

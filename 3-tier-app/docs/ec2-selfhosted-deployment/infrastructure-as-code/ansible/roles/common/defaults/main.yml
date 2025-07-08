@@ -1,0 +1,69 @@
+---
+# Default variables for common role
+
+# Project Configuration
+project_name: "3-tier-app"
+environment: "dev"
+owner_email: "thiago.shimada@dnx.solutions"
+
+# Application Configuration
+app:
+  name: "3-tier-form-app"
+  version: "1.0.0"
+  port: 3000
+  user: "ubuntu"
+  group: "ubuntu"
+  home_dir: "/home/ubuntu"
+  app_dir: "/opt/3-tier-app"
+  logs_dir: "/opt/3-tier-app/logs"
+  backups_dir: "/opt/3-tier-app/backups"
+
+# Repository Configuration
+repository:
+  url: "https://github.com/DNXLabs/mentorship-challenges.git"
+  branch: "main"
+  local_path: "/home/ubuntu/mentorship-challenges"
+
+# Database Configuration
+database:
+  name: "formapp"
+  user: "formapp_user"
+  password: "SecurePassword123!"
+  host: "localhost"
+  port: 3306
+  root_password: "RootPassword123!"
+
+# Web Server Configuration
+nginx:
+  server_name: "_"
+  document_root: "/var/www/html"
+  access_log: "/var/log/nginx/3-tier-app-access.log"
+  error_log: "/var/log/nginx/3-tier-app-error.log"
+
+# PM2 Configuration
+pm2:
+  app_name: "formapp-api"
+  instances: 1
+  exec_mode: "fork"
+  watch: false
+  max_memory_restart: "200M"
+
+# Security Configuration
+security:
+  ufw_enabled: true
+  fail2ban_enabled: true
+  allowed_ports:
+    - "22"
+    - "80"
+    - "443"
+
+# Backup Configuration
+backup:
+  enabled: true
+  retention_days: 7
+  schedule: "0 2 * * *"
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  log_rotation: true

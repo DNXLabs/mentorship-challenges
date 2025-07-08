@@ -1,0 +1,27 @@
+# Log rotation configuration for 3-tier application
+{{ app.logs_dir }}/*.log {
+    daily
+    missingok
+    rotate {{ backup.retention_days }}
+    compress
+    delaycompress
+    notifempty
+    create 644 {{ app.user }} {{ app.group }}
+    postrotate
+        # Reload PM2 logs
+        su {{ app.user }} -c "pm2 reloadLogs" > /dev/null 2>&1 || true
+    endscript
+}
+
+/var/log/nginx/3-tier-app-*.log {
+    daily
+    missingok
+    rotate {{ backup.retention_days }}
+    compress
+    delaycompress
+    notifempty
+    create 644 www-data adm
+    postrotate
+        systemctl reload nginx > /dev/null 2>&1 || true
+    endscript
+}

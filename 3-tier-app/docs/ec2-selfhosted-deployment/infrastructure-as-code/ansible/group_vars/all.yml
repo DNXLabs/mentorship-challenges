@@ -1,0 +1,90 @@
+---
+# Global variables for 3-tier application deployment
+# These can be overridden by environment-specific files or host variables
+
+# Project Configuration
+project_name: "{{ project_name | default('3-tier-app') }}"
+environment: "{{ environment | default('dev') }}"
+owner_email: "{{ owner_email | default('admin@example.com') }}"
+
+# Application Configuration
+app:
+  name: "{{ app_name | default('3-tier-form-app') }}"
+  version: "{{ app_version | default('1.0.0') }}"
+  port: "{{ app_port | default(3000) }}"
+  user: "{{ app_user | default('ubuntu') }}"
+  group: "{{ app_group | default('ubuntu') }}"
+  home_dir: "{{ app_home_dir | default('/home/ubuntu') }}"
+  app_dir: "{{ app_directory | default('/opt/3-tier-app') }}"
+  logs_dir: "{{ app_logs_dir | default('/opt/3-tier-app/logs') }}"
+  backups_dir: "{{ app_backups_dir | default('/opt/3-tier-app/backups') }}"
+
+# Repository Configuration
+repository:
+  url: "{{ repo_url | default('https://github.com/DNXLab/mentorship-challenges.git') }}"
+  branch: "{{ repo_branch | default('main') }}"
+  local_path: "{{ repo_local_path | default('/home/ubuntu/mentorship-challenges') }}"
+
+# Database Configuration
+database:
+  name: "{{ db_name | default('formapp') }}"
+  user: "{{ db_user | default('formapp_user') }}"
+  password: "{{ db_password | default('SecurePassword123!') }}"
+  host: "{{ db_host | default('localhost') }}"
+  port: "{{ db_port | default(3306) }}"
+  root_password: "{{ db_root_password | default('RootPassword123!') }}"
+
+# Web Server Configuration
+nginx:
+  server_name: "{{ nginx_server_name | default('_') }}"
+  document_root: "{{ nginx_document_root | default('/var/www/html') }}"
+  access_log: "{{ nginx_access_log | default('/var/log/nginx/3-tier-app-access.log') }}"
+  error_log: "{{ nginx_error_log | default('/var/log/nginx/3-tier-app-error.log') }}"
+  client_max_body_size: "{{ nginx_client_max_body_size | default('10M') }}"
+
+# PM2 Configuration
+pm2:
+  app_name: "{{ pm2_app_name | default('formapp-api') }}"
+  instances: "{{ pm2_instances | default(1) }}"
+  exec_mode: "{{ pm2_exec_mode | default('fork') }}"
+  watch: "{{ pm2_watch | default(false) }}"
+  max_memory_restart: "{{ pm2_max_memory_restart | default('200M') }}"
+
+# Security Configuration
+security:
+  ufw_enabled: "{{ security_ufw_enabled | default(true) }}"
+  fail2ban_enabled: "{{ security_fail2ban_enabled | default(true) }}"
+  allowed_ports: "{{ security_allowed_ports | default(['22', '80', '443']) }}"
+  ssh_port: "{{ security_ssh_port | default(22) }}"
+
+# Backup Configuration
+backup:
+  enabled: "{{ backup_enabled | default(true) }}"
+  retention_days: "{{ backup_retention_days | default(7) }}"
+  schedule: "{{ backup_schedule | default('0 2 * * *') }}"  # Daily at 2 AM
+
+# Monitoring Configuration
+monitoring:
+  enabled: "{{ monitoring_enabled | default(true) }}"
+  log_rotation: "{{ monitoring_log_rotation | default(true) }}"
+  health_check_interval: "{{ monitoring_health_check_interval | default('*/5') }}"  # Every 5 minutes
+
+# SSL/TLS Configuration (optional)
+ssl:
+  enabled: "{{ ssl_enabled | default(false) }}"
+  cert_path: "{{ ssl_cert_path | default('/etc/ssl/certs/app.crt') }}"
+  key_path: "{{ ssl_key_path | default('/etc/ssl/private/app.key') }}"
+  redirect_http: "{{ ssl_redirect_http | default(true) }}"
+
+# Performance Configuration
+performance:
+  nodejs_max_old_space_size: "{{ nodejs_max_old_space_size | default(512) }}"
+  nginx_worker_processes: "{{ nginx_worker_processes | default('auto') }}"
+  nginx_worker_connections: "{{ nginx_worker_connections | default(1024) }}"
+
+# Feature Flags
+features:
+  install_docker: "{{ install_docker | default(false) }}"
+  install_monitoring_tools: "{{ install_monitoring_tools | default(true) }}"
+  configure_logrotate: "{{ configure_logrotate | default(true) }}"
+  setup_cron_jobs: "{{ setup_cron_jobs | default(true) }}"

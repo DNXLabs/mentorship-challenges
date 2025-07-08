@@ -1,0 +1,78 @@
+---
+# Production Environment Variables
+# Override default values for production environment
+
+# Project Configuration
+environment: "prod"
+owner_email: "devops@company.com"
+
+# Application Configuration - Production settings
+app:
+  version: "1.0.0"
+  port: 3000
+
+# Database Configuration - Production settings
+database:
+  name: "formapp_prod"
+  user: "formapp_prod_user"
+  # Use Ansible Vault for production passwords
+  password: "{{ vault_db_password }}"
+  root_password: "{{ vault_db_root_password }}"
+
+# Web Server Configuration - Production settings
+nginx:
+  server_name: "app.yourcompany.com"
+  client_max_body_size: "10M"
+
+# PM2 Configuration - Production settings
+pm2:
+  app_name: "formapp-api"
+  instances: 2  # Multiple instances for production
+  exec_mode: "cluster"  # Cluster mode for better performance
+  watch: false  # Disable file watching in production
+  max_memory_restart: "500M"
+
+# Security Configuration - Strict security for production
+security:
+  ufw_enabled: true
+  fail2ban_enabled: true
+  allowed_ports: ["22", "80", "443"]  # Only essential ports
+  ssh_port: 2222  # Non-standard SSH port for security
+
+# Backup Configuration - Frequent backups for production
+backup:
+  enabled: true
+  retention_days: 30
+  schedule: "0 2 * * *"  # Daily at 2 AM
+
+# Monitoring Configuration - Comprehensive monitoring for production
+monitoring:
+  enabled: true
+  health_check_interval: "*/2"  # Every 2 minutes
+
+# SSL/TLS Configuration - Enable SSL for production
+ssl:
+  enabled: true
+  cert_path: "/etc/ssl/certs/app.crt"
+  key_path: "/etc/ssl/private/app.key"
+  redirect_http: true
+
+# Performance Configuration - Optimized for production
+performance:
+  nodejs_max_old_space_size: 1024
+  nginx_worker_processes: "auto"
+  nginx_worker_connections: 2048
+
+# Feature Flags - Production-focused features
+features:
+  install_docker: false  # No Docker in production unless needed
+  install_monitoring_tools: true
+  configure_logrotate: true
+  setup_cron_jobs: true
+
+# Production-specific variables
+prod_settings:
+  enable_access_logs: true
+  enable_error_tracking: true
+  enable_performance_monitoring: true
+  enable_security_scanning: true

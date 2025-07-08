@@ -1,0 +1,96 @@
+---
+# Web server setup and configuration tasks
+
+- name: Ensure Nginx is running
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes
+  tags: ['service']
+
+- name: Remove default Nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: reload nginx
+  tags: ['configuration']
+
+- name: Copy web application files
+  copy:
+    src: "{{ repository.local_path }}/3-tier-app/src/web/"
+    dest: "{{ nginx.document_root }}/"
+    owner: www-data
+    group: www-data
+    mode: '0755'
+    remote_src: yes
+  tags: ['deployment']
+
+- name: Create Nginx site configuration
+  template:
+    src: nginx_site.conf.j2
+    dest: /etc/nginx/sites-available/{{ app.name }}
+    mode: '0644'
+  notify: reload nginx
+  tags: ['configuration']
+
+- name: Enable Nginx site
+  file:
+    src: /etc/nginx/sites-available/{{ app.name }}
+    dest: /etc/nginx/sites-enabled/{{ app.name }}
+    state: link
+  notify: reload nginx
+  tags: ['configuration']
+
+- name: Test Nginx configuration
+  command: nginx -t
+  register: nginx_test
+  changed_when: false
+  tags: ['verification']
+
+- name: Display Nginx test results
+  debug:
+    msg: "Nginx configuration test: {{ nginx_test.stderr }}"
+  tags: ['verification']
+
+- name: Ensure Nginx is reloaded
+  meta: flush_handlers
+
+- name: Wait for Nginx to be ready
+  wait_for:
+    port: 80
+    host: localhost
+    delay: 2
+    timeout: 30
+  tags: ['verification']
+
+- name: Test web application
+  uri:
+    url: "http://localhost/"
+    method: GET
+    status_code: 200
+  register: web_test
+  tags: ['verification']
+
+- name: Test admin panel
+  uri:
+    url: "http://localhost/admin.html"
+    method: GET
+    status_code: 200
+  register: admin_test
+  tags: ['verification']
+
+- name: Display web test results
+  debug:
+    msg:
+      - "Main page status: {{ web_test.status }}"
+      - "Admin panel status: {{ admin_test.status }}"
+  tags: ['verification']
+
+- name: Create web server monitoring script
+  template:
+    src: monitor_web.sh.j2
+    dest: "{{ app.app_dir }}/monitor_web.sh"
+    mode: '0755'
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+  tags: ['monitoring']

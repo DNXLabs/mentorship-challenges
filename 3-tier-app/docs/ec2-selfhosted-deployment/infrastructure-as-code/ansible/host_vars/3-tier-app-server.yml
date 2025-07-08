@@ -1,0 +1,52 @@
+---
+# Host-specific variables for 3-tier-app-server
+# Update these values with your actual server details
+
+# Connection Configuration
+ansible_host: "YOUR_SERVER_PUBLIC_IP"  # Replace with actual IP from Terraform output
+ansible_user: ubuntu
+ansible_ssh_private_key_file: ~/.ssh/3-tier-app  # Your existing key (without .pem extension)
+ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+
+# Server Details (from Terraform outputs - optional for reference)
+instance_id: "YOUR_INSTANCE_ID"
+availability_zone: "YOUR_AZ"
+private_ip: "YOUR_PRIVATE_IP"
+instance_type: "t3.micro"
+
+# Application Configuration
+app_name: "3-tier-form-app"
+app_environment: "dev"
+app_owner: "admin@example.com"
+
+# Project Configuration
+project_name: "3-tier-app"
+environment: "dev"
+deployment_user: ubuntu
+
+# Database Configuration (customize if needed)
+db_name: "formapp"
+db_user: "formapp_user"
+db_password: "SecurePassword123!"  # Change this!
+db_root_password: "RootPassword123!"  # Change this!
+
+# Application Port (customize if needed)
+app_port: 3000
+
+# Nginx Configuration (customize if needed)
+nginx_server_name: "_"  # Use "_" for any hostname, or specify your domain
+
+# PM2 Configuration (customize if needed)
+pm2_app_name: "formapp-api"
+pm2_instances: 1
+
+# Security Configuration
+security_ufw_enabled: true
+security_fail2ban_enabled: true
+
+# Backup Configuration
+backup_enabled: true
+backup_retention_days: 7
+
+# Monitoring Configuration
+monitoring_enabled: true

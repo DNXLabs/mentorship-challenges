@@ -1,0 +1,496 @@
+# ============================================================================
+# DNX Solutions - Mentorship Challenges .gitignore
+# Comprehensive ignore patterns for 3-tier application project
+# ============================================================================
+
+# ============================================================================
+# SECURITY & SENSITIVE FILES (NEVER COMMIT THESE!)
+# ============================================================================
+
+# SSH Keys and Certificates
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+id_ecdsa*
+.ssh/
+ssh_keys/
+
+# AWS Credentials and Config
+.aws/credentials
+.aws/config
+aws-credentials*
+*.aws
+
+# Environment Variables and Secrets
+.env
+.env.*
+!.env.example
+!.env.template
+*.secret
+secrets.yml
+secrets.yaml
+vault_pass*
+.vault_pass*
+
+# Database Credentials
+database.yml
+db_credentials*
+mysql_root_password*
+
+# API Keys and Tokens
+api_keys*
+*.token
+.secrets/
+
+# ============================================================================
+# TERRAFORM
+# ============================================================================
+
+# Terraform State Files (contain sensitive data)
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Terraform Variable Files (may contain sensitive data)
+terraform.tfvars
+*.auto.tfvars
+*.auto.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform Directories
+.terraform/
+.terraform.lock.hcl
+terraform.tfplan
+tfplan
+
+# Terraform Crash Logs
+crash.log
+crash.*.log
+
+# ============================================================================
+# ANSIBLE
+# ============================================================================
+
+# Ansible Vault Files
+vault.yml
+vault.yaml
+group_vars/vault.yml
+host_vars/vault.yml
+**/vault.yml
+**/vault.yaml
+
+# Ansible Retry Files
+*.retry
+
+# Ansible Logs
+ansible.log
+*.ansible.log
+
+# Ansible Collections and Roles (if downloaded)
+collections/
+roles/downloaded/
+
+# Ansible Inventory Files (may contain IPs and sensitive info)
+inventory/hosts.yml
+inventory/production
+inventory/staging
+!inventory/hosts.yml.example
+!inventory/hosts.yml.template
+
+# Host Variables (may contain sensitive server details)
+host_vars/*.yml
+!host_vars/*.yml.example
+!host_vars/*.yml.template
+
+# ============================================================================
+# NODE.JS / NPM
+# ============================================================================
+
+# Dependencies
+node_modules/
+
+# Large debug logs (ignore these)
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# But ALLOW smaller application logs for learning
+# *.log (commented out for learning purposes)
+
+# Runtime Data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage Directory
+lib-cov
+coverage/
+*.lcov
+.nyc_output
+
+# Grunt Intermediate Storage
+.grunt
+
+# Bower Dependency Directory
+bower_components
+
+# Node-waf Configuration
+.lock-wscript
+
+# Compiled Binary Addons
+build/Release
+
+# Dependency Directories
+jspm_packages/
+
+# TypeScript Cache
+*.tsbuildinfo
+
+# Optional npm Cache Directory
+.npm
+
+# Optional eslint Cache
+.eslintcache
+
+# Microbundle Cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL History
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity File
+.yarn-integrity
+
+# dotenv Environment Variables File
+.env
+.env.test
+.env.production
+
+# Parcel-bundler Cache
+.cache
+.parcel-cache
+
+# Next.js Build Output
+.next
+
+# Nuxt.js Build / Generate Output
+.nuxt
+dist
+
+# Gatsby Files
+.cache/
+public
+
+# Storybook Build Outputs
+.out
+.storybook-out
+
+# Temporary Folders
+tmp/
+temp/
+
+# ============================================================================
+# DATABASES
+# ============================================================================
+
+# MySQL
+*.sql
+*.dump
+mysql_data/
+mysql_logs/
+
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
+
+# Database Backups
+*.backup
+*.bak
+backups/
+db_backups/
+
+# ============================================================================
+# LOGS AND MONITORING (Selective for Learning)
+# ============================================================================
+
+# Large/Sensitive System Logs (ignore these)
+/var/log/
+syslog
+auth.log
+
+# PM2 Runtime Logs (ignore these - they get large)
+.pm2/
+
+# But ALLOW application logs for learning/debugging
+# logs/
+# *.log
+# error.log
+# access.log
+
+# Large monitoring data (ignore these)
+monitoring/data/
+metrics/data/
+
+# ============================================================================
+# OPERATING SYSTEM
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# EDITORS AND IDEs
+# ============================================================================
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json.example
+!.vscode/launch.json.example
+!.vscode/extensions.json.example
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# Vim
+*.swp
+*.swo
+*~
+.vimrc.local
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# Atom
+.atom/
+
+# ============================================================================
+# DEVELOPMENT AND BUILD TOOLS
+# ============================================================================
+
+# Build Directories
+build/
+dist/
+target/
+bin/
+obj/
+
+# Package Files
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# Compiled Files
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# ============================================================================
+# DOCKER
+# ============================================================================
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+.docker/
+
+# ============================================================================
+# CLOUD AND DEPLOYMENT
+# ============================================================================
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+kube-config
+
+# Helm
+charts/*.tgz
+
+# CDK
+cdk.out/
+cdk.context.json
+
+# Pulumi
+Pulumi.*.yaml
+!Pulumi.yaml
+
+# ============================================================================
+# TESTING
+# ============================================================================
+
+# Test Results
+test-results/
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# ============================================================================
+# TEMPORARY AND CACHE FILES
+# ============================================================================
+
+# General Temporary Files
+*.tmp
+*.temp
+*.cache
+.cache/
+
+# Backup Files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Archive Files (unless specifically needed)
+*.tar
+*.gz
+*.bz2
+*.xz
+
+# ============================================================================
+# PROJECT-SPECIFIC PATTERNS
+# ============================================================================
+
+# 3-Tier Application Specific
+src/uploads/
+public/uploads/
+static/uploads/
+
+# Application Data
+app_data/
+user_data/
+
+# Configuration Files with Sensitive Data
+config/production.json
+config/staging.json
+!config/development.json.example
+!config/production.json.example
+
+# ============================================================================
+# DOCUMENTATION BUILD FILES
+# ============================================================================
+
+# Generated Documentation
+docs/_build/
+docs/build/
+site/
+
+# ============================================================================
+# ALLOW THESE IMPORTANT FILES (override above patterns)
+# ============================================================================
+
+# Important Example and Template Files
+!*.example
+!*.template
+!*.sample
+!README.md
+!CHANGELOG.md
+!LICENSE
+!.gitkeep
+
+# Important Configuration Examples
+!terraform.tfvars.example
+!.env.example
+!docker-compose.yml.example
+!ansible.cfg.example
+
+# Documentation
+!docs/
+!*.md
+
+# ============================================================================
+# END OF .gitignore
+# ============================================================================

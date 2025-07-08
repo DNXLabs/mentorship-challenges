@@ -1,0 +1,97 @@
+---
+# Security hardening tasks
+
+- name: Ensure UFW is configured
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: "{{ security.allowed_ports }}"
+  when: security.ufw_enabled
+  tags: ['firewall']
+
+- name: Enable UFW
+  ufw:
+    state: enabled
+    policy: deny
+  when: security.ufw_enabled
+  tags: ['firewall']
+
+- name: Configure fail2ban for SSH protection
+  template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    mode: '0644'
+  notify: restart fail2ban
+  when: security.fail2ban_enabled
+  tags: ['fail2ban']
+
+- name: Ensure fail2ban is running
+  systemd:
+    name: fail2ban
+    state: started
+    enabled: yes
+  when: security.fail2ban_enabled
+  tags: ['fail2ban']
+
+- name: Set secure permissions on application files
+  file:
+    path: "{{ item.path }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner | default(app.user) }}"
+    group: "{{ item.group | default(app.group) }}"
+  loop:
+    - { path: "{{ app.app_dir }}/.env", mode: "0600" }
+    - { path: "{{ app.app_dir }}/api/.env", mode: "0600" }
+    - { path: "/root/.my.cnf", mode: "0600", owner: "root", group: "root" }
+  tags: ['permissions']
+
+- name: Remove unnecessary packages
+  apt:
+    name:
+      - telnet
+      - rsh-client
+      - rsh-redone-client
+    state: absent
+  tags: ['packages']
+
+- name: Configure automatic security updates
+  apt:
+    name: unattended-upgrades
+    state: present
+  tags: ['updates']
+
+- name: Configure unattended upgrades
+  template:
+    src: 50unattended-upgrades.j2
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    mode: '0644'
+  tags: ['updates']
+
+- name: Enable automatic updates
+  template:
+    src: 20auto-upgrades.j2
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    mode: '0644'
+  tags: ['updates']
+
+- name: Create security audit script
+  template:
+    src: security_audit.sh.j2
+    dest: "{{ app.app_dir }}/scripts/security_audit.sh"
+    mode: '0755'
+    owner: "{{ app.user }}"
+    group: "{{ app.group }}"
+  tags: ['audit']
+
+- name: Schedule security audit
+  cron:
+    name: "3-tier-app security audit"
+    cron_file: 3-tier-app-security
+    user: root
+    job: "{{ app.app_dir }}/scripts/security_audit.sh >> {{ app.logs_dir }}/security_audit.log 2>&1"
+    minute: "0"
+    hour: "3"
+    weekday: "0"
+    state: present
+  tags: ['audit']

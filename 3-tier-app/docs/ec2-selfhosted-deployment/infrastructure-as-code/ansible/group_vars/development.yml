@@ -1,0 +1,67 @@
+---
+# Development Environment Variables
+# Override default values for development environment
+
+# Project Configuration
+environment: "dev"
+owner_email: "developer@company.com"
+
+# Application Configuration - Development settings
+app:
+  version: "dev-latest"
+  port: 3000
+
+# Database Configuration - Development settings
+database:
+  name: "formapp_dev"
+  user: "formapp_dev_user"
+  password: "DevPassword123!"
+  root_password: "DevRootPassword123!"
+
+# Web Server Configuration - Development settings
+nginx:
+  server_name: "dev.local"
+  client_max_body_size: "50M"  # Larger for development testing
+
+# PM2 Configuration - Development settings
+pm2:
+  app_name: "formapp-api-dev"
+  instances: 1  # Single instance for development
+  watch: true   # Enable file watching in development
+  max_memory_restart: "100M"  # Lower memory limit for development
+
+# Security Configuration - More permissive for development
+security:
+  ufw_enabled: false  # Disable firewall for easier development
+  fail2ban_enabled: false  # Disable fail2ban for development
+
+# Backup Configuration - Less frequent for development
+backup:
+  enabled: true
+  retention_days: 3
+  schedule: "0 4 * * *"  # Daily at 4 AM
+
+# Monitoring Configuration - Basic monitoring for development
+monitoring:
+  enabled: true
+  health_check_interval: "*/10"  # Every 10 minutes
+
+# Performance Configuration - Lower resources for development
+performance:
+  nodejs_max_old_space_size: 256
+  nginx_worker_processes: 1
+  nginx_worker_connections: 512
+
+# Feature Flags - Enable development tools
+features:
+  install_docker: true  # Install Docker for development
+  install_monitoring_tools: true
+  configure_logrotate: true
+  setup_cron_jobs: true
+
+# Development-specific variables
+dev_tools:
+  install_git_extras: true
+  install_nodejs_dev_tools: true
+  install_database_tools: true
+  create_sample_data: true
