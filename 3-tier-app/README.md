@@ -104,10 +104,8 @@ The application code is ready - your focus is on:
 3. **Focus Area** - Choose based on career goals (infrastructure, containers, serverless)
 
 ### **Documentation Structure**
-- **`docs/aws-ec2-deployment/`** - Traditional server deployment
-- **`docs/aws-ecs-deployment/`** - Container orchestration
-- **`docs/aws-serverless-deployment/`** - Serverless architecture
-- **`docs/aws-eks-deployment/`** - Kubernetes deployment
+- **`docs/ec2-selfhosted-deployment/`** - Traditional server deployment
+
 
 Each deployment path includes:
 - Architecture diagrams
