@@ -11,7 +11,7 @@ ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
 # Server Details (from Terraform outputs)
 instance_id: "i-1234567890abcdef0"
 availability_zone: "us-east-1a"
-private_ip: "10.0.1.100"
+private_ip: "10.100.1.100"
 instance_type: "t3.micro"
 
 # Application Configuration

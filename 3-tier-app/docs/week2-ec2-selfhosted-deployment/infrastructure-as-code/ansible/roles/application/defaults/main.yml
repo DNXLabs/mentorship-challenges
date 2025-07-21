@@ -20,7 +20,7 @@ app:
 
 # Repository Configuration
 repository:
-  url: "https://github.com/DNXLab/mentorship-challenges.git"
+  url: "https://github.com/DNXLabs/mentorship-challenges.git"
   branch: "main"
   local_path: "/home/ubuntu/mentorship-challenges"
 
@@ -53,9 +53,9 @@ security:
   ufw_enabled: true
   fail2ban_enabled: true
   allowed_ports:
-    - "22"
-    - "80"
-    - "443"
+  - "22"
+  - "80"
+  - "443"
 
 # Backup Configuration
 backup:

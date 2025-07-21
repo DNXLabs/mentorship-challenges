@@ -21,7 +21,7 @@ app:
 
 # Repository Configuration
 repository:
-  url: "{{ repo_url | default('https://github.com/DNXLab/mentorship-challenges.git') }}"
+  url: "{{ repo_url | default('https://github.com/DNXLabs/mentorship-challenges.git') }}"
   branch: "{{ repo_branch | default('main') }}"
   local_path: "{{ repo_local_path | default('/home/ubuntu/mentorship-challenges') }}"
 
@@ -61,13 +61,13 @@ security:
 backup:
   enabled: "{{ backup_enabled | default(true) }}"
   retention_days: "{{ backup_retention_days | default(7) }}"
-  schedule: "{{ backup_schedule | default('0 2 * * *') }}"  # Daily at 2 AM
+  schedule: "{{ backup_schedule | default('0 2 * * *') }}" # Daily at 2 AM
 
 # Monitoring Configuration
 monitoring:
   enabled: "{{ monitoring_enabled | default(true) }}"
   log_rotation: "{{ monitoring_log_rotation | default(true) }}"
-  health_check_interval: "{{ monitoring_health_check_interval | default('*/5') }}"  # Every 5 minutes
+  health_check_interval: "{{ monitoring_health_check_interval | default('*/5') }}" # Every 5 minutes
 
 # SSL/TLS Configuration (optional)
 ssl:
