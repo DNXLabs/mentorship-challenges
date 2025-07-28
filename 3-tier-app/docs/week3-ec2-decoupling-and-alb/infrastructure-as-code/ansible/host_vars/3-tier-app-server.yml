@@ -1,0 +1,66 @@
+---
+# Host-specific variables for Week 3: 3-Tier Application with RDS and ALB
+# Update these values with your actual infrastructure details from Terraform output
+
+# Connection Configuration
+ansible_host: "YOUR_SERVER_PUBLIC_IP"  # Replace with actual IP
+ansible_user: ubuntu
+ansible_ssh_private_key_file: /home/vscode/.ssh/mentoring-key.pem  # Update path as needed
+ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+
+# Server Details (from Terraform outputs)
+instance_id: "YOUR_INSTANCE_ID"
+availability_zone: "ap-southeast-2a"
+private_ip: "YOUR_PRIVATE_IP"
+instance_type: "t3.micro"
+
+# Project Configuration
+project_name: "3tier-app"
+environment: "dev"
+deployment_user: ubuntu
+
+# RDS Database Configuration (from Terraform outputs)
+rds_endpoint: "YOUR_RDS_ENDPOINT"  # Replace with actual RDS endpoint
+db_name: "formapp"
+db_username: "admin"  # RDS admin user
+db_password: "SecurePassword123!"  # RDS admin password
+db_app_username: "formapp_user"  # Application user
+db_app_password: "SecureAppPassword123!"  # Application user password
+db_port: 3306
+
+# Load Balancer Configuration (from Terraform outputs)
+alb_dns_name: "YOUR_ALB_DNS_NAME"  # Replace with actual ALB DNS name
+target_group_arn: "YOUR_TARGET_GROUP_ARN"  # Replace with actual target group ARN
+
+# Application Configuration
+app_name: "3-tier-form-app"
+app_port: 3000
+app_directory: "/opt/3-tier-app"
+
+# Nginx Configuration
+nginx_server_name: "_"  # Accept any hostname
+
+# PM2 Configuration
+pm2_app_name: "formapp-api"
+pm2_instances: 1
+
+# Migration Configuration
+backup_local_db: true
+backup_directory: "/opt/3-tier-app/backups"
+migration_timeout: 300  # 5 minutes
+
+# Monitoring Configuration
+monitoring_enabled: true
+cloudwatch_log_group: "/aws/application/3tier-app"
+
+# Security Configuration
+security_ufw_enabled: true
+security_fail2ban_enabled: true
+
+# Week 3 Specific Features
+week3_features:
+  migrate_to_rds: true
+  configure_alb_health_checks: true
+  setup_cloudwatch_monitoring: true
+  optimize_for_load_balancer: true
+  disable_local_mysql: true

@@ -1,0 +1,104 @@
+---
+# Group Variables for three_tier_app group
+# Week 3: RDS and ALB Configuration
+
+# Project Information
+project_name: "3tier-app"
+environment: "dev"
+deployment_stage: "week3-rds-alb"
+
+# Application Configuration
+app_name: "FormApp"
+app_version: "1.0.0"
+app_port: 3000
+app_directory: "/opt/3-tier-app"
+
+# Node.js Configuration
+node_env: "production"
+pm2_app_name: "formapp-api"
+
+# Database Configuration
+# These should be overridden with actual values from Terraform outputs
+local_database_name: "formapp"
+local_db_username: "root"
+# local_db_password should be defined in host_vars or vault
+
+# RDS Configuration (to be populated from Terraform)
+# rds_endpoint: "your-rds-endpoint.region.rds.amazonaws.com"
+# rds_database_name: "formapp"
+# rds_master_username: "admin"
+# rds_master_password: "secure-password"
+# rds_app_username: "formapp_user"
+# rds_app_password: "secure-app-password"
+
+# Security Configuration
+bcrypt_rounds: 12
+jwt_secret: "change-this-in-production-use-vault"
+session_secret: "change-this-in-production-use-vault"
+
+# CORS Configuration
+cors_origin: "*"  # Restrict in production
+
+# Rate Limiting
+rate_limit_window: 900000  # 15 minutes in milliseconds
+rate_limit_max: 100
+
+# Logging Configuration
+log_level: "info"
+
+# Health Check Configuration
+health_check_enabled: true
+health_check_path: "/api/health"
+
+# Monitoring Configuration
+cloudwatch_namespace: "3TierApp/Week3"
+cloudwatch_log_group: "/aws/ec2/3tier-app"
+
+# Nginx Configuration
+nginx_installed: true
+server_name: "_"  # Accept all hostnames
+
+# Feature Flags
+enable_sticky_sessions: false
+stop_local_mysql: false
+update_database_config: true
+
+# SSL/TLS Configuration (for future use)
+enable_ssl: false
+ssl_cert_path: ""
+ssl_key_path: ""
+
+# Backup Configuration
+backup_retention_days: 7
+
+# Connection Timeouts
+mysql_connect_timeout: 30
+mysql_read_timeout: 30
+mysql_write_timeout: 30
+
+# Performance Tuning
+db_connection_limit: 10
+db_acquire_timeout: 60000
+db_timeout: 60000
+
+# Deployment Configuration
+deployment_user: "ubuntu"
+deployment_group: "ubuntu"
+
+# Directory Permissions
+app_directory_mode: "0755"
+config_file_mode: "0600"
+script_file_mode: "0755"
+
+# Service Configuration
+services_to_restart:
+  - nginx
+  - amazon-cloudwatch-agent
+
+# Testing Configuration
+run_tests: true
+test_timeout: 60
+
+# Cleanup Configuration
+cleanup_temp_files: true
+cleanup_backups: true

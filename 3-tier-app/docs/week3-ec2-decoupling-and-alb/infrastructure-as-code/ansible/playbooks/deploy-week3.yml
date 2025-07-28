@@ -1,0 +1,21 @@
+---
+# Week 3 Deployment Playbook: Database Migration to RDS and ALB Setup
+# This playbook migrates the application from local MySQL to RDS and configures ALB
+
+- name: Week 3 - Migrate to RDS and Configure ALB
+  hosts: three_tier_app
+  become: yes
+  gather_facts: yes
+  
+  vars:
+    deployment_timestamp: "{{ ansible_date_time.epoch }}"
+    
+  roles:
+    - role: database_migration
+      tags: ['database', 'migration', 'rds']
+    - role: application_update
+      tags: ['application', 'config']
+    - role: alb_preparation
+      tags: ['alb', 'loadbalancer']
+    - role: monitoring_update
+      tags: ['monitoring', 'cloudwatch']

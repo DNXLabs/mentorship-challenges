@@ -1,0 +1,88 @@
+---
+# Database Migration Role - Tasks
+# Migrates data from local MySQL to Amazon RDS
+
+- name: Install MySQL client for database operations
+  apt:
+    name: mysql-client
+    state: present
+    update_cache: yes
+
+- name: Install Python MySQL connector
+  pip:
+    name: PyMySQL
+    state: present
+
+- name: Test connectivity to RDS instance
+  mysql_db:
+    name: "{{ rds_database_name }}"
+    login_host: "{{ rds_endpoint }}"
+    login_user: "{{ rds_master_username }}"
+    login_password: "{{ rds_master_password }}"
+    state: present
+  register: rds_connection_test
+  retries: 5
+  delay: 10
+
+- name: Display RDS connection status
+  debug:
+    msg: "Successfully connected to RDS instance: {{ rds_endpoint }}"
+  when: rds_connection_test is succeeded
+
+- name: Create application database user on RDS
+  mysql_user:
+    name: "{{ rds_app_username }}"
+    password: "{{ rds_app_password }}"
+    host: "%"
+    priv: "{{ rds_database_name }}.*:ALL"
+    login_host: "{{ rds_endpoint }}"
+    login_user: "{{ rds_master_username }}"
+    login_password: "{{ rds_master_password }}"
+    state: present
+
+- name: Check if local database exists and has data
+  shell: sudo mysql -e "USE {{ local_database_name | default('formapp') }}; SHOW TABLES;"
+  register: local_db_check
+  ignore_errors: yes
+
+- name: Export local database if it exists
+  shell: sudo mysqldump {{ local_database_name | default('formapp') }} > /tmp/{{ local_database_name | default('formapp') }}_backup.sql
+  when: local_db_check.rc == 0
+  register: db_export
+
+- name: Import database to RDS
+  mysql_db:
+    name: "{{ rds_database_name }}"
+    login_host: "{{ rds_endpoint }}"
+    login_user: "{{ rds_master_username }}"
+    login_password: "{{ rds_master_password }}"
+    state: import
+    target: "/tmp/{{ local_database_name | default('formapp') }}_backup.sql"
+  when: db_export.rc == 0
+
+- name: Verify data migration
+  mysql_query:
+    login_host: "{{ rds_endpoint }}"
+    login_user: "{{ rds_app_username }}"
+    login_password: "{{ rds_app_password }}"
+    login_db: "{{ rds_database_name }}"
+    query: "SHOW TABLES;"
+  register: rds_tables
+
+- name: Display migrated tables
+  debug:
+    msg: "Tables in RDS: {{ rds_tables.query_result }}"
+
+- name: Clean up local database backup
+  file:
+    path: "/tmp/{{ local_database_name | default('formapp') }}_backup.sql"
+    state: absent
+  when: db_export.rc == 0
+
+- name: Stop local MySQL service (optional)
+  systemd:
+    name: mysql
+    state: stopped
+    enabled: no
+  when: stop_local_mysql | default(false) | bool
+  ignore_errors: yes

@@ -36,50 +36,39 @@ roles/
 3. **SSH access** to the target server
 4. **Server details** from Terraform outputs
 
-### 1. Create Host Variables
+### 1. Update Server Details
 
-```bash
-# Create host-specific configuration
-vim host_vars/3-tier-app-server.yml
-```
+Edit `host_vars/3-tier-app-server.yml` with your server information:
 
-**Add your server details:**
 ```yaml
----
 # Connection details (from terraform output)
-ansible_host: "YOUR_SERVER_PUBLIC_IP"  # From terraform output
-ansible_user: ubuntu
-ansible_ssh_private_key_file: ~/.ssh/3-tier-app
-ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+ansible_host: "YOUR_SERVER_PUBLIC_IP"  # Your server's public IP
+ansible_ssh_private_key_file: ~/.ssh/your-key.pem  # Path to your SSH key
 
-# Database configuration (change these passwords!)
+# Database passwords (change these!)
 db_password: "YourSecurePassword123!"
 db_root_password: "YourSecureRootPassword123!"
-
-# Application configuration
-app_port: 3000
-nginx_server_name: "_"  # or your domain
 ```
 
-### 2. Test Connection
+### 2. Deploy Application
+
+That's it! Just run:
 
 ```bash
-# Test if Ansible can connect to your server
-ansible all -i inventory/hosts.yml -m ping
+ansible-playbook playbooks/deploy.yml
 ```
 
-### 3. Deploy Application
-
+**Optional commands:**
 ```bash
-# Deploy the full application
-ansible-playbook -i inventory/hosts.yml playbooks/deploy.yml
+# Test connection first
+ansible all -m ping
 
-# Deploy with verbose output (to learn what's happening)
-ansible-playbook -i inventory/hosts.yml playbooks/deploy.yml -v
+# Deploy with verbose output
+ansible-playbook playbooks/deploy.yml -v
 
 # Deploy specific components only
-ansible-playbook -i inventory/hosts.yml playbooks/deploy.yml --tags database
-ansible-playbook -i inventory/hosts.yml playbooks/deploy.yml --tags application
+ansible-playbook playbooks/deploy.yml --tags database
+ansible-playbook playbooks/deploy.yml --tags application
 ```
 
 ## 🔧 Configuration Management

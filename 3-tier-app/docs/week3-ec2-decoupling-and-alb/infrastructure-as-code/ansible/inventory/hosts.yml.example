@@ -1,0 +1,135 @@
+---
+# =============================================================================
+# Week 3: 3-Tier Application with RDS and ALB - Ansible Inventory Example
+# =============================================================================
+#
+# INSTRUCTIONS:
+# 1. Copy this file to hosts.yml: cp hosts.yml.example hosts.yml
+# 2. Update the host configuration in host_vars/app-server-1.yml
+# 3. Run validation: ../../validate-config.sh
+# 4. Deploy: ansible-playbook -i inventory/hosts.yml playbooks/deploy.yml
+#
+# =============================================================================
+
+all:
+  children:
+    three_tier_app:
+      hosts:
+        app-server-1:
+          # Host-specific variables are defined in host_vars/app-server-1.yml
+          # This keeps the inventory clean and organized
+          
+      vars:
+        # =============================================================================
+        # ENVIRONMENT CONFIGURATION
+        # =============================================================================
+        
+        environment: "dev"  # CHANGE THIS: dev/staging/prod
+        project_name: "3tier-app"
+        
+        # =============================================================================
+        # APPLICATION CONFIGURATION
+        # =============================================================================
+        
+        # Node.js application settings
+        node_env: "production"  # Node environment
+        app_port: 3000         # Port the app runs on internally
+        
+        # =============================================================================
+        # MONITORING AND LOGGING
+        # =============================================================================
+        
+        # CloudWatch configuration
+        cloudwatch_namespace: "3TierApp/Week3"
+        cloudwatch_log_group: "/aws/ec2/3tier-app"
+        
+        # Logging level
+        log_level: "info"  # Options: debug, info, warn, error
+        
+        # =============================================================================
+        # FEATURE FLAGS
+        # =============================================================================
+        
+        # Database migration settings
+        stop_local_mysql: false        # Keep local MySQL during migration
+        update_database_config: true   # Update app to use RDS
+        
+        # Load balancer settings
+        enable_sticky_sessions: false  # ALB handles session distribution
+        
+        # =============================================================================
+        # NGINX CONFIGURATION
+        # =============================================================================
+        
+        # Server configuration
+        server_name: "_"  # Accept all hostnames (ALB handles routing)
+        
+        # =============================================================================
+        # SECURITY CONFIGURATION
+        # =============================================================================
+        
+        # Rate limiting (requests per window)
+        rate_limit_window: 900000  # 15 minutes in milliseconds
+        rate_limit_max: 100       # Max requests per window
+        
+        # CORS settings
+        cors_origin: "*"  # CHANGE THIS: Restrict in production (e.g., "https://yourdomain.com")
+        
+        # =============================================================================
+        # SSL/TLS CONFIGURATION (Future HTTPS setup)
+        # =============================================================================
+        
+        enable_ssl: false      # Set to true when you have SSL certificates
+        ssl_cert_path: ""      # Path to SSL certificate
+        ssl_key_path: ""       # Path to SSL private key
+        
+        # =============================================================================
+        # DEPLOYMENT CONFIGURATION
+        # =============================================================================
+        
+        # Application deployment settings
+        app_user: "ubuntu"           # User to run the application
+        app_directory: "/opt/app"    # Application installation directory
+        
+        # Service management
+        restart_services: true      # Restart services after configuration changes
+        
+        # =============================================================================
+        # BACKUP AND MAINTENANCE
+        # =============================================================================
+        
+        # Backup settings (for local data migration)
+        backup_local_data: true     # Backup local MySQL before migration
+        backup_directory: "/tmp/backup"
+        
+        # Maintenance mode
+        maintenance_mode: false     # Set to true to enable maintenance page
+
+# =============================================================================
+# CONFIGURATION NOTES
+# =============================================================================
+#
+# Host-Specific Variables:
+# - Connection details (IP, SSH key) are in host_vars/app-server-1.yml
+# - Database credentials are in host_vars/app-server-1.yml
+# - Instance-specific settings are in host_vars/app-server-1.yml
+#
+# Group Variables (above):
+# - Shared configuration across all hosts in the group
+# - Environment settings
+# - Feature flags
+# - Security settings
+#
+# =============================================================================
+
+# =============================================================================
+# SECURITY CHECKLIST
+# =============================================================================
+#
+# ✅ Updated environment to match your deployment
+# ✅ Restricted cors_origin in production
+# ✅ Configured appropriate log_level
+# ✅ Set proper rate limiting values
+# ✅ Updated host_vars/app-server-1.yml with actual values
+#
+# =============================================================================

@@ -1,0 +1,102 @@
+---
+# Application Update Role - Tasks
+# Updates application configuration to use RDS instead of local MySQL
+
+- name: Stop the application before configuration changes
+  command: pm2 stop formapp-api
+  become_user: ubuntu
+  ignore_errors: yes
+
+- name: Backup current environment configuration
+  copy:
+    src: /opt/3-tier-app/api/.env
+    dest: "/opt/3-tier-app/api/.env.backup.{{ ansible_date_time.epoch }}"
+    remote_src: yes
+    backup: yes
+  ignore_errors: yes
+
+- name: Update API environment configuration for RDS
+  template:
+    src: api_env.j2
+    dest: /opt/3-tier-app/api/.env
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
+
+- name: Update database connection in API code (if needed)
+  template:
+    src: database_config.js.j2
+    dest: /opt/3-tier-app/api/config/database.js
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+  when: false  # Skip this since the app works fine with .env only
+
+- name: Install additional Node.js dependencies if needed
+  npm:
+    path: /opt/3-tier-app/api
+    state: present
+  become_user: ubuntu
+
+- name: Test database connection
+  shell: |
+    cd /opt/3-tier-app/api
+    node -e "
+    require('dotenv').config();
+    const mysql = require('mysql2/promise');
+    async function test() {
+      try {
+        const connection = await mysql.createConnection({
+          host: process.env.DB_HOST,
+          user: process.env.DB_USER,
+          password: process.env.DB_PASSWORD,
+          database: process.env.DB_NAME
+        });
+        console.log('Database connection successful');
+        await connection.end();
+      } catch (error) {
+        console.error('Database connection failed:', error.message);
+        process.exit(1);
+      }
+    }
+    test();
+    "
+  become_user: ubuntu
+  register: db_connection_test
+
+- name: Display database connection test result
+  debug:
+    msg: "Database connection test: {{ db_connection_test.stdout }}"
+
+- name: Start the application with new configuration
+  command: pm2 start formapp-api
+  become_user: ubuntu
+  register: app_start_result
+
+- name: Display application start result
+  debug:
+    msg: "Application start result: {{ app_start_result.stdout }}"
+
+- name: Save PM2 configuration
+  command: pm2 save
+  become_user: ubuntu
+
+- name: Wait for application to be ready
+  wait_for:
+    port: 3000
+    host: localhost
+    delay: 5
+    timeout: 60
+
+- name: Test API endpoint
+  uri:
+    url: "http://localhost:3000/api/submissions"
+    method: GET
+    status_code: 200
+  register: api_health_check
+  retries: 3
+  delay: 5
+
+- name: Display API health check result
+  debug:
+    msg: "API health check: {{ api_health_check.status }} - {{ api_health_check.json | default('No JSON response') }}"

@@ -1,0 +1,41 @@
+---
+# Application Update Role - Handlers
+# Handlers for application restart and related tasks
+
+- name: restart application
+  block:
+    - name: Stop application
+      command: pm2 stop formapp-api
+      become_user: ubuntu
+      ignore_errors: yes
+      
+    - name: Wait for application to stop
+      wait_for:
+        port: 3000
+        host: localhost
+        state: stopped
+        timeout: 30
+      ignore_errors: yes
+      
+    - name: Start application
+      command: pm2 start formapp-api
+      become_user: ubuntu
+      
+    - name: Wait for application to start
+      wait_for:
+        port: 3000
+        host: localhost
+        delay: 5
+        timeout: 60
+
+- name: reload nginx
+  systemd:
+    name: nginx
+    state: reloaded
+  when: nginx_installed | default(true) | bool
+
+- name: restart nginx
+  systemd:
+    name: nginx
+    state: restarted
+  when: nginx_installed | default(true) | bool

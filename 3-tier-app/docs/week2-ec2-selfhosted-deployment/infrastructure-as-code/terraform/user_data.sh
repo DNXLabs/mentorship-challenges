@@ -7,7 +7,7 @@ set -e
 # Variables from Terraform
 PROJECT_NAME="${project_name}"
 ENVIRONMENT="${environment}"
-INSTALL_DEV_TOOLS="${install_dev_tools:-false}"
+INSTALL_DEV_TOOLS="${install_dev_tools}"
 
 # Log all output
 exec > >(tee /var/log/user-data.log)

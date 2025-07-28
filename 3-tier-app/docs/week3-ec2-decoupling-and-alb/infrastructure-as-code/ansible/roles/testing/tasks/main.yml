@@ -1,0 +1,173 @@
+---
+# Testing Role - Tasks
+# Comprehensive testing for Week 3 deployment with RDS and ALB
+
+- name: Create testing directory
+  file:
+    path: /opt/3-tier-app/tests
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Install testing dependencies
+  npm:
+    name: "{{ item }}"
+    path: /opt/3-tier-app/api
+    state: present
+  loop:
+    - jest
+    - supertest
+    - mysql2
+  become_user: ubuntu
+
+- name: Create database connectivity test
+  template:
+    src: test_database.js.j2
+    dest: /opt/3-tier-app/tests/test_database.js
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Create API endpoint tests
+  template:
+    src: test_api.js.j2
+    dest: /opt/3-tier-app/tests/test_api.js
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Create health check tests
+  template:
+    src: test_health.js.j2
+    dest: /opt/3-tier-app/tests/test_health.js
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Create load testing script
+  template:
+    src: load_test.sh.j2
+    dest: /opt/3-tier-app/tests/load_test.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Test database connectivity
+  command: node /opt/3-tier-app/tests/test_database.js
+  become_user: ubuntu
+  register: db_test_result
+  changed_when: false
+
+- name: Display database test result
+  debug:
+    msg: "Database connectivity test: {{ db_test_result.stdout }}"
+
+- name: Test API health endpoint
+  uri:
+    url: "http://localhost/api/health"
+    method: GET
+    status_code: 200
+    timeout: 10
+  register: health_test_result
+  retries: 3
+  delay: 5
+
+- name: Display health endpoint test result
+  debug:
+    msg: "Health endpoint test: Status {{ health_test_result.status }}"
+
+- name: Test API readiness endpoint
+  uri:
+    url: "http://localhost/api/ready"
+    method: GET
+    status_code: 200
+    timeout: 10
+  register: ready_test_result
+  retries: 3
+  delay: 5
+  ignore_errors: yes
+
+- name: Display readiness endpoint test result
+  debug:
+    msg: "Readiness endpoint test: Status {{ ready_test_result.status | default('Failed') }}"
+
+- name: Test API liveness endpoint
+  uri:
+    url: "http://localhost/api/live"
+    method: GET
+    status_code: 200
+    timeout: 10
+  register: live_test_result
+  retries: 3
+  delay: 5
+  ignore_errors: yes
+
+- name: Display liveness endpoint test result
+  debug:
+    msg: "Liveness endpoint test: Status {{ live_test_result.status | default('Failed') }}"
+
+- name: Test frontend accessibility
+  uri:
+    url: "http://localhost/"
+    method: GET
+    status_code: 200
+    timeout: 10
+  register: frontend_test_result
+  retries: 3
+  delay: 5
+
+- name: Display frontend test result
+  debug:
+    msg: "Frontend accessibility test: Status {{ frontend_test_result.status }}"
+
+- name: Test Nginx status endpoint
+  uri:
+    url: "http://localhost/nginx-status"
+    method: GET
+    status_code: 200
+    timeout: 10
+  register: nginx_status_result
+  ignore_errors: yes
+
+- name: Display Nginx status test result
+  debug:
+    msg: "Nginx status test: {{ nginx_status_result.status | default('Failed') }}"
+
+- name: Create comprehensive test report
+  template:
+    src: test_report.html.j2
+    dest: /opt/3-tier-app/tests/test_report.html
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Run performance baseline test
+  command: /opt/3-tier-app/tests/load_test.sh baseline
+  become_user: ubuntu
+  register: performance_test
+  changed_when: false
+  ignore_errors: yes
+
+- name: Display performance test result
+  debug:
+    msg: "Performance baseline test completed. Check /opt/3-tier-app/tests/load_test_results.txt for details."
+
+- name: Create validation summary
+  template:
+    src: validation_summary.txt.j2
+    dest: /opt/3-tier-app/tests/validation_summary.txt
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Display testing completion summary
+  debug:
+    msg:
+      - "=== Week 3 Testing Summary ==="
+      - "Database connectivity: {{ 'PASS' if db_test_result.rc == 0 else 'FAIL' }}"
+      - "Health endpoint: {{ 'PASS' if health_test_result.status == 200 else 'FAIL' }}"
+      - "Frontend accessibility: {{ 'PASS' if frontend_test_result.status == 200 else 'FAIL' }}"
+      - "Application is ready for ALB integration"
+      - "Test reports available in /opt/3-tier-app/tests/"
+      - "=============================="

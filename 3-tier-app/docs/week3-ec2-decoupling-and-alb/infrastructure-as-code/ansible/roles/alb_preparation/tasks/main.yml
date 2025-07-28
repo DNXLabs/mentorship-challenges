@@ -1,0 +1,106 @@
+---
+# ALB Preparation Role - Tasks
+# Prepares the application server for Application Load Balancer integration
+
+- name: Update Nginx configuration for ALB health checks
+  template:
+    src: nginx_alb.conf.j2
+    dest: /etc/nginx/sites-available/3tier-app
+    backup: yes
+  notify: restart nginx
+
+- name: Ensure Nginx site is enabled
+  file:
+    src: /etc/nginx/sites-available/3tier-app
+    dest: /etc/nginx/sites-enabled/3tier-app
+    state: link
+  notify: restart nginx
+
+- name: Remove default Nginx site if it exists
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: restart nginx
+
+- name: Test Nginx configuration
+  command: nginx -t
+  register: nginx_test
+  changed_when: false
+
+- name: Display Nginx configuration test result
+  debug:
+    msg: "Nginx configuration test: {{ nginx_test.stdout }}"
+
+- name: Create health check endpoint in API
+  template:
+    src: health_check.js.j2
+    dest: /opt/3-tier-app/api/routes/health.js
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+  notify: restart application
+
+- name: Update API main file to include health check route
+  lineinfile:
+    path: /opt/3-tier-app/api/app.js
+    line: "app.use('/api', require('./routes/health'));"
+    insertafter: "// Routes"
+    create: yes
+  notify: restart application
+
+- name: Configure application for ALB sticky sessions (if needed)
+  template:
+    src: session_config.js.j2
+    dest: /opt/3-tier-app/api/config/session.js
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+  when: enable_sticky_sessions | default(false) | bool
+  notify: restart application
+
+- name: Update security group to allow ALB traffic
+  debug:
+    msg: "Security group updates should be handled by Terraform. Ensure ALB security group can reach port 80 on this instance."
+
+- name: Create ALB health check test script
+  template:
+    src: test_health_check.sh.j2
+    dest: /opt/3-tier-app/scripts/test_health_check.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Test local health check endpoint
+  uri:
+    url: "http://localhost/api/health"
+    method: GET
+    status_code: 200
+  register: local_health_check
+  retries: 3
+  delay: 5
+
+- name: Display local health check result
+  debug:
+    msg: "Local health check: {{ local_health_check.status }} - {{ local_health_check.json | default('No JSON response') }}"
+
+- name: Configure log rotation for application logs
+  template:
+    src: app_logrotate.j2
+    dest: /etc/logrotate.d/3tier-app
+    mode: '0644'
+
+- name: Create monitoring script for ALB integration
+  template:
+    src: alb_monitoring.sh.j2
+    dest: /opt/3-tier-app/scripts/alb_monitoring.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Display ALB preparation completion message
+  debug:
+    msg:
+      - "ALB preparation completed successfully"
+      - "Health check endpoint: http://{{ ansible_default_ipv4.address }}/api/health"
+      - "Application is ready for ALB integration"
+      - "Next: Register this instance with ALB target group"

@@ -1,0 +1,126 @@
+---
+# Monitoring Update Role - Tasks
+# Updates monitoring configuration for Week 3 architecture with RDS and ALB
+
+- name: Install CloudWatch agent
+  get_url:
+    url: "https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb"
+    dest: "/tmp/amazon-cloudwatch-agent.deb"
+    mode: '0644'
+
+- name: Install CloudWatch agent package
+  apt:
+    deb: "/tmp/amazon-cloudwatch-agent.deb"
+    state: present
+
+- name: Create CloudWatch agent configuration
+  template:
+    src: cloudwatch_config.json.j2
+    dest: /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+    mode: '0644'
+  notify: restart cloudwatch agent
+
+- name: Create CloudWatch agent service configuration
+  template:
+    src: cloudwatch_service.json.j2
+    dest: /opt/aws/amazon-cloudwatch-agent/etc/common-config.toml
+    mode: '0644'
+  notify: restart cloudwatch agent
+
+- name: Start and enable CloudWatch agent
+  systemd:
+    name: amazon-cloudwatch-agent
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Create custom metrics script
+  template:
+    src: custom_metrics.sh.j2
+    dest: /opt/3-tier-app/scripts/custom_metrics.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Create cron job for custom metrics
+  cron:
+    name: "Send custom metrics to CloudWatch"
+    minute: "*/5"
+    job: "/opt/3-tier-app/scripts/custom_metrics.sh"
+    user: ubuntu
+
+- name: Create application performance monitoring script
+  template:
+    src: app_monitoring.sh.j2
+    dest: /opt/3-tier-app/scripts/app_monitoring.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Install Node.js monitoring dependencies
+  npm:
+    name: "{{ item }}"
+    path: /opt/3-tier-app/api
+    state: present
+  loop:
+    - prom-client
+    - express-prometheus-middleware
+  become_user: ubuntu
+
+- name: Create Prometheus metrics endpoint
+  template:
+    src: metrics.js.j2
+    dest: /opt/3-tier-app/api/routes/metrics.js
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+  notify: restart application
+
+- name: Update API to include metrics endpoint
+  lineinfile:
+    path: /opt/3-tier-app/api/app.js
+    line: "app.use('/metrics', require('./routes/metrics'));"
+    insertafter: "// Routes"
+    create: yes
+  notify: restart application
+
+- name: Create log aggregation configuration
+  template:
+    src: rsyslog_app.conf.j2
+    dest: /etc/rsyslog.d/30-3tier-app.conf
+    mode: '0644'
+  notify: restart rsyslog
+
+- name: Create monitoring dashboard script
+  template:
+    src: monitoring_dashboard.sh.j2
+    dest: /opt/3-tier-app/scripts/monitoring_dashboard.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Test CloudWatch agent status
+  command: systemctl status amazon-cloudwatch-agent
+  register: cloudwatch_status
+  changed_when: false
+
+- name: Display CloudWatch agent status
+  debug:
+    msg: "CloudWatch agent status: {{ cloudwatch_status.stdout_lines[-5:] }}"
+
+- name: Create monitoring validation script
+  template:
+    src: validate_monitoring.sh.j2
+    dest: /opt/3-tier-app/scripts/validate_monitoring.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Display monitoring setup completion
+  debug:
+    msg:
+      - "Monitoring setup completed successfully"
+      - "CloudWatch agent is running and collecting metrics"
+      - "Custom metrics are being sent every 5 minutes"
+      - "Application metrics available at /metrics endpoint"
+      - "Logs are being aggregated and sent to CloudWatch"

@@ -1,0 +1,192 @@
+---
+# =============================================================================
+# Week 3: Host Variables for app-server-1 - Example Configuration
+# =============================================================================
+#
+# INSTRUCTIONS:
+# 1. Copy this file to app-server-1.yml: cp app-server-1.yml.example app-server-1.yml
+# 2. Update all values marked with "CHANGE THIS" or "REPLACE WITH"
+# 3. Get values from Terraform outputs: ../../get-terraform-outputs.sh
+# 4. Validate configuration: ../../validate-config.sh
+# 5. Deploy: ansible-playbook -i inventory/hosts.yml playbooks/deploy.yml
+#
+# =============================================================================
+
+# =============================================================================
+# CONNECTION CONFIGURATION
+# =============================================================================
+
+# EC2 instance connection details
+ansible_host: "YOUR.EC2.PUBLIC.IP"  # CHANGE THIS: Replace with your EC2 public IP
+ansible_user: ubuntu                # Default user for Ubuntu AMI
+ansible_ssh_private_key_file: "/path/to/your/private-key.pem"  # CHANGE THIS: Path to your SSH key
+
+# Instance information
+instance_id: "i-xxxxxxxxxxxxxxxxx"  # CHANGE THIS: Your EC2 instance ID from AWS console
+
+# =============================================================================
+# RDS DATABASE CONFIGURATION
+# =============================================================================
+# These values should match your terraform.tfvars and come from Terraform outputs
+
+# RDS connection details
+terraform_rds_endpoint: "your-database.region.rds.amazonaws.com"  # CHANGE THIS: From Terraform output
+terraform_rds_database_name: "formapp"                           # Should match terraform.tfvars
+terraform_rds_master_username: "admin"                           # Should match terraform.tfvars
+terraform_rds_master_password: "YourSecurePassword123!"          # CHANGE THIS: Should match terraform.tfvars
+
+# Application database user (optional - for better security)
+terraform_rds_app_username: "formapp_user"      # CHANGE THIS: Should match terraform.tfvars
+terraform_rds_app_password: "YourAppPassword123!"  # CHANGE THIS: Should match terraform.tfvars
+
+# =============================================================================
+# APPLICATION LOAD BALANCER CONFIGURATION
+# =============================================================================
+# These values come from Terraform outputs
+
+terraform_alb_dns_name: "your-alb-dns-name.region.elb.amazonaws.com"  # CHANGE THIS: From Terraform output
+terraform_alb_zone_id: "ZXXXXXXXXXXXXX"                               # CHANGE THIS: From Terraform output
+terraform_target_group_arn: "arn:aws:elasticloadbalancing:region:account:targetgroup/name/id"  # CHANGE THIS: From Terraform output
+
+# =============================================================================
+# LOCAL DATABASE CONFIGURATION (Week 2 Migration)
+# =============================================================================
+
+# Local MySQL settings (for data migration from Week 2)
+local_db_password: "password"  # CHANGE THIS: If you changed the default password in Week 2
+
+# =============================================================================
+# SECURITY CONFIGURATION
+# =============================================================================
+
+# Application secrets - IMPORTANT: Change these in production!
+vault_jwt_secret: "your-super-secret-jwt-key-change-in-production-min-32-chars"      # CHANGE THIS: Use a strong secret
+vault_session_secret: "your-session-secret-change-in-production-min-32-chars"        # CHANGE THIS: Use a strong secret
+
+# =============================================================================
+# ENVIRONMENT CONFIGURATION
+# =============================================================================
+
+deployment_environment: "dev"        # CHANGE THIS: dev/staging/prod
+node_environment: "production"       # Node.js environment setting
+
+# =============================================================================
+# SSH AND ACCESS CONFIGURATION
+# =============================================================================
+
+ssh_private_key_path: "/path/to/your/private-key.pem"  # CHANGE THIS: Same as ansible_ssh_private_key_file
+
+# =============================================================================
+# FEATURE FLAGS FOR THIS HOST
+# =============================================================================
+
+# Database migration settings
+stop_local_mysql: false              # Keep local MySQL running during migration
+enable_sticky_sessions: false        # ALB handles session distribution
+
+# Deployment settings
+restart_nginx: true                  # Restart nginx after configuration changes
+restart_app: true                    # Restart application after deployment
+
+# =============================================================================
+# MONITORING AND LOGGING
+# =============================================================================
+
+# CloudWatch agent configuration
+enable_cloudwatch_agent: true        # Enable CloudWatch monitoring
+cloudwatch_region: "us-east-1"      # CHANGE THIS: Should match your AWS region
+
+# Application logging
+app_log_level: "info"                # Application log level
+enable_access_logs: true             # Enable nginx access logs
+
+# =============================================================================
+# BACKUP CONFIGURATION
+# =============================================================================
+
+# Local data backup (before migration)
+backup_local_mysql: true             # Backup local MySQL before switching to RDS
+backup_retention_days: 7             # Days to keep local backups
+
+# =============================================================================
+# PERFORMANCE TUNING
+# =============================================================================
+
+# Application performance settings
+app_max_memory: "512m"               # Maximum memory for Node.js app
+app_workers: 1                       # Number of worker processes (adjust based on instance size)
+
+# Nginx performance settings
+nginx_worker_processes: "auto"       # Nginx worker processes
+nginx_worker_connections: 1024       # Connections per worker
+
+# =============================================================================
+# EXAMPLE VALUES FOR DIFFERENT REGIONS
+# =============================================================================
+#
+# US East (N. Virginia): us-east-1
+# cloudwatch_region: "us-east-1"
+# terraform_rds_endpoint: "formapp-database.xxxxx.us-east-1.rds.amazonaws.com"
+#
+# US West (Oregon): us-west-2
+# cloudwatch_region: "us-west-2"  
+# terraform_rds_endpoint: "formapp-database.xxxxx.us-west-2.rds.amazonaws.com"
+#
+# Europe (Ireland): eu-west-1
+# cloudwatch_region: "eu-west-1"
+# terraform_rds_endpoint: "formapp-database.xxxxx.eu-west-1.rds.amazonaws.com"
+#
+# =============================================================================
+
+# =============================================================================
+# HOW TO GET TERRAFORM OUTPUT VALUES
+# =============================================================================
+#
+# Run these commands in the terraform directory:
+#
+# terraform output rds_endpoint
+# terraform output alb_dns_name
+# terraform output alb_zone_id
+# terraform output target_group_arn
+#
+# Or use the helper script:
+# ../../get-terraform-outputs.sh
+#
+# =============================================================================
+
+# =============================================================================
+# SECURITY CHECKLIST BEFORE DEPLOYMENT
+# =============================================================================
+#
+# ✅ Updated ansible_host with actual EC2 public IP
+# ✅ Updated ansible_ssh_private_key_file with correct path
+# ✅ Updated instance_id with actual EC2 instance ID
+# ✅ Updated all terraform_* values with actual Terraform outputs
+# ✅ Changed vault_jwt_secret to a strong, unique value
+# ✅ Changed vault_session_secret to a strong, unique value
+# ✅ Updated cloudwatch_region to match your AWS region
+# ✅ Verified all database passwords match terraform.tfvars
+# ✅ Set appropriate deployment_environment
+#
+# =============================================================================
+
+# =============================================================================
+# TROUBLESHOOTING TIPS
+# =============================================================================
+#
+# Connection Issues:
+# - Verify EC2 instance is running and accessible
+# - Check security group allows SSH (port 22) from your IP
+# - Ensure SSH key has correct permissions (chmod 400)
+#
+# Database Issues:
+# - Verify RDS instance is available
+# - Check security group allows MySQL (port 3306) from EC2
+# - Confirm database credentials match terraform.tfvars
+#
+# Load Balancer Issues:
+# - Verify ALB is active and healthy
+# - Check target group health status
+# - Ensure security groups allow HTTP traffic
+#
+# =============================================================================

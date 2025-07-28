@@ -1,0 +1,155 @@
+# =============================================================================
+# Week 3: 3-Tier Application with RDS and ALB - Terraform Variables Example
+# =============================================================================
+# 
+# INSTRUCTIONS:
+# 1. Copy this file to terraform.tfvars: cp terraform.tfvars.example terraform.tfvars
+# 2. Update all values marked with "CHANGE THIS" or "REPLACE WITH"
+# 3. Run validation: ./validate-config.sh
+# 4. Deploy: terraform plan && terraform apply
+#
+# =============================================================================
+
+# =============================================================================
+# AWS CONFIGURATION
+# =============================================================================
+
+# AWS region where resources will be created
+aws_region = "us-east-1"  # CHANGE THIS: Choose your preferred region (e.g., us-west-2, eu-west-1)
+
+# Availability zones for high availability (must be in your chosen region)
+availability_zones = [
+  "us-east-1a"  # CHANGE THIS: Update to match your region (e.g., us-west-2a)
+  # "us-east-1b"  # Uncomment for multi-AZ deployment
+]
+
+# =============================================================================
+# PROJECT CONFIGURATION
+# =============================================================================
+
+project_name = "3tier-app"
+environment  = "dev"  # Options: dev, staging, prod
+
+# Default tags applied to all resources
+default_tags = {
+  Project     = "3tier-app"
+  Environment = "dev"
+  ManagedBy   = "Terraform"
+  Week        = "3"
+  Owner       = "CHANGE-THIS-TO-YOUR-NAME"  # CHANGE THIS: Your name or team
+}
+
+# =============================================================================
+# NETWORK CONFIGURATION
+# =============================================================================
+
+# Set to true if you want to use an existing VPC from Week 2
+use_existing_vpc = false  # CHANGE THIS: Set to true if you have a VPC from Week 2
+existing_vpc_id  = ""     # CHANGE THIS: If use_existing_vpc=true, provide VPC ID
+
+# Private subnet CIDRs for RDS (only needed if creating new VPC)
+private_subnet_cidrs = [
+  "10.0.10.0/24"
+  # "10.0.20.0/24"  # Uncomment for multi-AZ deployment
+]
+
+# Admin access - IMPORTANT: Restrict this to your IP for security
+admin_cidr_blocks = [
+  "0.0.0.0/0"  # WARNING: This allows access from anywhere!
+  # "YOUR.IP.ADDRESS.HERE/32"  # CHANGE THIS: Replace with your actual IP
+]
+
+# =============================================================================
+# DATABASE CONFIGURATION (Amazon RDS)
+# =============================================================================
+
+db_instance_identifier = "formapp-database"
+db_name                = "formapp"
+db_username            = "admin"
+db_password            = "CHANGE-THIS-PASSWORD-123!"  # CHANGE THIS: Use a strong password
+
+# Database instance settings
+db_engine_version    = "8.0.35"      # MySQL version
+db_instance_class    = "db.t3.micro" # Free tier eligible
+db_allocated_storage = 20            # GB of storage
+db_storage_type      = "gp2"         # General Purpose SSD
+db_storage_encrypted = true          # Always encrypt in production
+
+# High Availability (set to true for production)
+db_multi_az = false  # CHANGE THIS: Set to true for production environments
+
+# Backup and Maintenance
+db_backup_retention_period = 7                    # Days to retain backups
+db_backup_window          = "03:00-04:00"        # UTC backup window
+db_maintenance_window     = "sun:04:00-sun:05:00" # UTC maintenance window
+
+# Monitoring (Performance Insights not supported on t3.micro)
+db_monitoring_interval              = 0     # Enhanced monitoring (0=disabled)
+db_performance_insights_enabled     = false # Not supported on t3.micro
+db_performance_insights_retention   = 7
+
+# Safety settings
+db_deletion_protection  = false # CHANGE THIS: Set to true for production
+db_skip_final_snapshot = true  # CHANGE THIS: Set to false for production
+
+# =============================================================================
+# APPLICATION LOAD BALANCER CONFIGURATION
+# =============================================================================
+
+alb_name               = "3tier-app-alb"
+target_group_name      = "3tier-app-tg"
+alb_deletion_protection = false  # CHANGE THIS: Set to true for production
+
+# Health Check Settings
+target_group_healthy_threshold   = 2
+target_group_unhealthy_threshold = 2
+target_group_timeout            = 5
+target_group_interval           = 30
+target_group_health_check_path  = "/"
+
+# =============================================================================
+# MONITORING CONFIGURATION
+# =============================================================================
+
+log_retention_days = 7  # CloudWatch log retention in days
+
+# SNS Topic for Alarms (optional)
+sns_topic_arn = ""  # CHANGE THIS: Provide SNS topic ARN if you want alerts
+
+# =============================================================================
+# SSL/HTTPS CONFIGURATION (Optional - for future use)
+# =============================================================================
+
+ssl_certificate_arn   = ""    # CHANGE THIS: Provide ACM certificate ARN for HTTPS
+enable_https_listener = false # CHANGE THIS: Set to true when you have SSL certificate
+
+# =============================================================================
+# EXAMPLE VALUES FOR DIFFERENT REGIONS
+# =============================================================================
+#
+# US East (N. Virginia): us-east-1
+# availability_zones = ["us-east-1a", "us-east-1b"]
+#
+# US West (Oregon): us-west-2  
+# availability_zones = ["us-west-2a", "us-west-2b"]
+#
+# Europe (Ireland): eu-west-1
+# availability_zones = ["eu-west-1a", "eu-west-1b"]
+#
+# Asia Pacific (Sydney): ap-southeast-2
+# availability_zones = ["ap-southeast-2a", "ap-southeast-2b"]
+#
+# =============================================================================
+
+# =============================================================================
+# SECURITY CHECKLIST BEFORE DEPLOYMENT
+# =============================================================================
+#
+# ✅ Changed default passwords
+# ✅ Restricted admin_cidr_blocks to your IP
+# ✅ Updated availability_zones for your region
+# ✅ Set appropriate environment (dev/staging/prod)
+# ✅ Updated owner tag with your name
+# ✅ Reviewed all "CHANGE THIS" comments above
+#
+# =============================================================================

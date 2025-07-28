@@ -1,0 +1,42 @@
+---
+# Host Variables for app-server-1
+# Generated automatically from Terraform outputs on Mon Jul 28 03:58:51 AM UTC 2025
+
+# Connection Configuration
+ansible_host: ""
+ansible_user: ubuntu
+ansible_ssh_private_key_file: "/path/to/your/private-key.pem"  # UPDATE THIS PATH
+
+# Instance Information
+instance_id: ""
+
+# RDS Configuration (from Terraform outputs)
+terraform_rds_endpoint: "formapp-database.cfmkou6sc0ur.ap-southeast-2.rds.amazonaws.com:3306"
+terraform_rds_database_name: ""
+terraform_rds_master_username: ""
+terraform_rds_master_password: "CHANGE_ME"  # UPDATE WITH YOUR RDS MASTER PASSWORD
+terraform_rds_app_username: ""
+terraform_rds_app_password: "CHANGE_ME"  # UPDATE WITH YOUR RDS APP PASSWORD
+
+# ALB Configuration (from Terraform outputs)
+terraform_alb_dns_name: "3tier-app-alb-1493681212.ap-southeast-2.elb.amazonaws.com"
+terraform_alb_zone_id: "Z1GM3OXH4ZPM65"
+terraform_target_group_arn: "arn:aws:elasticloadbalancing:ap-southeast-2:410950695332:targetgroup/3tier-app-tg/f3b4961e7eb1fb10"
+
+# Local Database Configuration (for migration from Week 2)
+local_db_password: "password"  # UPDATE IF YOUR LOCAL DB PASSWORD IS DIFFERENT
+
+# Security Configuration
+vault_jwt_secret: "your-super-secret-jwt-key-change-in-production"  # UPDATE THIS
+vault_session_secret: "your-session-secret-change-in-production"  # UPDATE THIS
+
+# Environment Specific Settings
+deployment_environment: "dev"
+node_environment: "production"
+
+# SSH Configuration
+ssh_private_key_path: "/path/to/your/private-key.pem"  # UPDATE THIS PATH
+
+# Feature Flags for this host
+stop_local_mysql: false  # Keep local MySQL running during migration
+enable_sticky_sessions: false
