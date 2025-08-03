@@ -1,0 +1,131 @@
+{
+  "family": "formapp-task-ec2",
+  "networkMode": "bridge",
+  "requiresCompatibilities": ["EC2"],
+  "placementConstraints": [],
+  "executionRoleArn": "arn:aws:iam::410950695332:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::410950695332:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "formapp-web",
+      "image": "thiago4go/formapp-web:final",
+      "memory": 256,
+      "memoryReservation": 128,
+      "portMappings": [
+        {
+          "hostPort": 80,
+          "containerPort": 80,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "links": ["formapp-api"],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/formapp",
+          "awslogs-region": "ap-southeast-2",
+          "awslogs-stream-prefix": "web"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "wget -q -O - http://localhost/ || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "dependsOn": [
+        {
+          "containerName": "formapp-api",
+          "condition": "HEALTHY"
+        }
+      ]
+    },
+    {
+      "name": "formapp-api",
+      "image": "thiago4go/formapp-api:latest",
+      "memory": 512,
+      "memoryReservation": 256,
+      "portMappings": [
+        {
+          "hostPort": 3000,
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "3000"
+        },
+        {
+          "name": "DB_HOST",
+          "value": "formapp-database.ap-southeast-2.rds.amazonaws.com"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "3306"
+        },
+        {
+          "name": "DB_NAME",
+          "value": "formapp"
+        },
+        {
+          "name": "DB_USER",
+          "value": "formapp_user"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "value": "SecureAppPassword123!"
+        },
+        {
+          "name": "CORS_ORIGIN",
+          "value": "*"
+        },
+        {
+          "name": "CORS_METHODS",
+          "value": "GET,POST,PUT,DELETE,OPTIONS"
+        },
+        {
+          "name": "CORS_CREDENTIALS",
+          "value": "true"
+        },
+        {
+          "name": "LOG_LEVEL",
+          "value": "info"
+        },
+        {
+          "name": "ENABLE_REQUEST_LOGGING",
+          "value": "true"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/formapp",
+          "awslogs-region": "ap-southeast-2",
+          "awslogs-stream-prefix": "api"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "wget -q -O - http://localhost:3000/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}

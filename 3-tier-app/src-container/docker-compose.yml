@@ -1,0 +1,106 @@
+# =============================================================================
+# Docker Compose Configuration for 3-Tier Application
+# =============================================================================
+# This file provides local development environment that mirrors ECS deployment
+# Use this for testing before deploying to AWS ECS with RDS
+
+services:
+  # =============================================================================
+  # DATABASE TIER - MySQL Database
+  # =============================================================================
+  db:
+    image: mysql:8.0
+    container_name: formapp-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # =============================================================================
+  # APPLICATION TIER - Node.js API
+  # =============================================================================
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: formapp-api
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - CORS_METHODS=${CORS_METHODS}
+      - CORS_CREDENTIALS=${CORS_CREDENTIALS}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - ENABLE_REQUEST_LOGGING=${ENABLE_REQUEST_LOGGING}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    volumes:
+      - api_logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =============================================================================
+  # PRESENTATION TIER - Nginx Web Server
+  # =============================================================================
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: formapp-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  app-network:
+    driver: bridge
+    name: formapp-network
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  db_data:
+    name: formapp-db-data
+  api_logs:
+    name: formapp-api-logs
