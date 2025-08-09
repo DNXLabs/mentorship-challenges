@@ -1,0 +1,10 @@
+{
+  "name": "3tier-app-lambda",
+  "version": "1.0.0",
+  "description": "Serverless backend for 3-tier application",
+  "main": "index.js",
+  "dependencies": {
+    "mysql2": "^3.14.1",
+    "uuid": "^8.3.2"
+  }
+}

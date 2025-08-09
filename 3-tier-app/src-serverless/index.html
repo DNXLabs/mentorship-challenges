@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Registration Form - Serverless</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-step {
+            display: none;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .form-step.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-navigation {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.secondary {
+            background-color: #6c757d;
+        }
+        button.secondary:hover {
+            background-color: #5a6268;
+        }
+        .admin-link {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .serverless-badge {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="serverless-badge">🚀 Serverless</div>
+    
+    <h1>User Registration Form</h1>
+    <p><em>Powered by AWS Serverless Architecture</em></p>
+    
+    <div class="success-message" id="successMessage">
+        Thank you for your submission! Your information has been successfully recorded.
+    </div>
+    
+    <form id="multiStepForm">
+        <!-- Step 1: Personal Information -->
+        <div class="form-step active" id="step1">
+            <h2>Step 1: Personal Information</h2>
+            
+            <div class="form-group">
+                <label for="firstName">First Name *</label>
+                <input type="text" id="firstName" name="firstName" required>
+                <div class="error" id="firstNameError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="lastName">Last Name *</label>
+                <input type="text" id="lastName" name="lastName" required>
+                <div class="error" id="lastNameError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required>
+                <div class="error" id="emailError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone">
+                <div class="error" id="phoneError"></div>
+            </div>
+            
+            <div class="form-navigation">
+                <div></div>
+                <button type="button" onclick="nextStep(1, 2)">Next</button>
+            </div>
+        </div>
+        
+        <!-- Step 2: Preferences -->
+        <div class="form-step" id="step2">
+            <h2>Step 2: Preferences</h2>
+            
+            <div class="form-group">
+                <label for="interests">Areas of Interest *</label>
+                <select id="interests" name="interests" required>
+                    <option value="">Select an option</option>
+                    <option value="technology">Technology</option>
+                    <option value="health">Health & Wellness</option>
+                    <option value="finance">Finance</option>
+                    <option value="education">Education</option>
+                    <option value="entertainment">Entertainment</option>
+                </select>
+                <div class="error" id="interestsError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="subscription">Subscription Type *</label>
+                <select id="subscription" name="subscription" required>
+                    <option value="">Select an option</option>
+                    <option value="free">Free</option>
+                    <option value="basic">Basic</option>
+                    <option value="premium">Premium</option>
+                </select>
+                <div class="error" id="subscriptionError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="frequency">Contact Frequency</label>
+                <select id="frequency" name="frequency">
+                    <option value="daily">Daily</option>
+                    <option value="weekly" selected>Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="never">Never</option>
+                </select>
+            </div>
+            
+            <div class="form-navigation">
+                <button type="button" class="secondary" onclick="prevStep(2, 1)">Previous</button>
+                <button type="button" onclick="nextStep(2, 3)">Next</button>
+            </div>
+        </div>
+        
+        <!-- Step 3: Confirmation -->
+        <div class="form-step" id="step3">
+            <h2>Step 3: Additional Information & Confirmation</h2>
+            
+            <div class="form-group">
+                <label for="comments">Additional Comments</label>
+                <textarea id="comments" name="comments" rows="4"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="terms">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    I agree to the Terms and Conditions *
+                </label>
+                <div class="error" id="termsError"></div>
+            </div>
+            
+            <div class="form-navigation">
+                <button type="button" class="secondary" onclick="prevStep(3, 2)">Previous</button>
+                <button type="button" onclick="submitForm()">Submit</button>
+            </div>
+        </div>
+    </form>
+    
+    <div class="admin-link">
+        <a href="/admin.html">Admin Dashboard</a>
+    </div>
+
+    <script>
+        // API Gateway endpoint - replace with your actual API Gateway URL
+        const API_URL = 'https://YOUR_API_GATEWAY_ID.execute-api.YOUR_REGION.amazonaws.com/prod';
+        
+        // Navigation between steps
+        function nextStep(currentStep, nextStep) {
+            if (!validateStep(currentStep)) {
+                return;
+            }
+            
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            document.getElementById(`step${nextStep}`).classList.add('active');
+        }
+        
+        function prevStep(currentStep, prevStep) {
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            document.getElementById(`step${prevStep}`).classList.add('active');
+        }
+        
+        // Validation for each step
+        function validateStep(step) {
+            let isValid = true;
+            
+            if (step === 1) {
+                const firstName = document.getElementById('firstName').value.trim();
+                if (!firstName) {
+                    document.getElementById('firstNameError').textContent = 'First name is required';
+                    isValid = false;
+                } else {
+                    document.getElementById('firstNameError').textContent = '';
+                }
+                
+                const lastName = document.getElementById('lastName').value.trim();
+                if (!lastName) {
+                    document.getElementById('lastNameError').textContent = 'Last name is required';
+                    isValid = false;
+                } else {
+                    document.getElementById('lastNameError').textContent = '';
+                }
+                
+                const email = document.getElementById('email').value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!email) {
+                    document.getElementById('emailError').textContent = 'Email is required';
+                    isValid = false;
+                } else if (!emailRegex.test(email)) {
+                    document.getElementById('emailError').textContent = 'Please enter a valid email address';
+                    isValid = false;
+                } else {
+                    document.getElementById('emailError').textContent = '';
+                }
+                
+                const phone = document.getElementById('phone').value.trim();
+                if (phone && !/^\d{10}$/.test(phone.replace(/\D/g, ''))) {
+                    document.getElementById('phoneError').textContent = 'Please enter a valid 10-digit phone number';
+                    isValid = false;
+                } else {
+                    document.getElementById('phoneError').textContent = '';
+                }
+            }
+            
+            if (step === 2) {
+                const interests = document.getElementById('interests').value;
+                if (!interests) {
+                    document.getElementById('interestsError').textContent = 'Please select an area of interest';
+                    isValid = false;
+                } else {
+                    document.getElementById('interestsError').textContent = '';
+                }
+                
+                const subscription = document.getElementById('subscription').value;
+                if (!subscription) {
+                    document.getElementById('subscriptionError').textContent = 'Please select a subscription type';
+                    isValid = false;
+                } else {
+                    document.getElementById('subscriptionError').textContent = '';
+                }
+            }
+            
+            return isValid;
+        }
+        
+        // Submit the form
+        async function submitForm() {
+            const terms = document.getElementById('terms').checked;
+            if (!terms) {
+                document.getElementById('termsError').textContent = 'You must agree to the terms and conditions';
+                return;
+            } else {
+                document.getElementById('termsError').textContent = '';
+            }
+            
+            if (!validateStep(1) || !validateStep(2)) {
+                alert('Please fill in all required fields correctly');
+                return;
+            }
+            
+            const formData = {
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                interests: document.getElementById('interests').value,
+                subscription: document.getElementById('subscription').value,
+                frequency: document.getElementById('frequency').value,
+                comments: document.getElementById('comments').value.trim(),
+                termsAccepted: true,
+                submittedAt: new Date().toISOString()
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/submissions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    document.getElementById('successMessage').style.display = 'block';
+                    document.getElementById('multiStepForm').reset();
+                    document.getElementById('step3').classList.remove('active');
+                    document.getElementById('step1').classList.add('active');
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.message || 'Failed to submit form'}`);
+                }
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                alert('An error occurred while submitting the form. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>
