@@ -370,7 +370,30 @@ aws ec2 authorize-security-group-ingress \
 
 7. **Test the Function**
    - Go to **Test** tab → **Create new test event**
-   - **Event template**: **API Gateway AWS Proxy**
+   - **Event template**: **Create a new event**
+   - **Event name**: `test-options-cors`
+   - Replace the test event with:
+   ```json
+   {
+     "httpMethod": "OPTIONS",
+     "path": "/submissions",
+     "pathParameters": null,
+     "body": null,
+     "headers": {
+       "Content-Type": "application/json"
+     },
+     "queryStringParameters": null,
+     "requestContext": {
+       "requestId": "test-request-id",
+       "stage": "prod"
+     }
+   }
+   ```
+   - Click **"Test"**
+   - **Expected Result**: `statusCode: 200` with CORS headers
+
+8. **Create Second Test Event**
+   - Click **"Test"** → **Configure test events** → **Create new test event**
    - **Event name**: `test-get-submissions`
    - Replace the test event with:
    ```json
@@ -381,11 +404,22 @@ aws ec2 authorize-security-group-ingress \
      "body": null,
      "headers": {
        "Content-Type": "application/json"
+     },
+     "queryStringParameters": null,
+     "requestContext": {
+       "requestId": "test-request-id",
+       "stage": "prod"
      }
    }
    ```
    - Click **"Test"**
-   - Verify you get a successful response
+   - **Expected Result**: `statusCode: 200` with empty array `[]` (if database connected) or `statusCode: 500` (if database not connected)
+
+9. **Publish the Function**
+   - Go to **Actions** → **Publish new version**
+   - **Version description**: `Initial serverless deployment`
+   - Click **"Publish"**
+   - **Note the Version ARN** (you'll need this for API Gateway)
 
 **Option B: Using AWS CLI**
 ```bash
